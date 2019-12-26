@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">USB I2C Scanner</string>
+    <string name="title_adapter_list">USB I2C Adapters</string>
+    <string name="title_device_list">I2C Devices</string>
+    <string name="adapter_scan_info">Scanning for USB I2C adapters…</string>
+    <string name="device_scan_info">Scanning I2C address: 0x%1$02x</string>
+    <string name="unknown_device">Unknown Device</string>
+</resources>

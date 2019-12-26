@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ Copyright (c) 2019 Victor Antonovich <v.antonovich@gmail.com>
+  ~
+  ~ This work is free software; you can redistribute it and/or
+  ~ modify it under the terms of the GNU Lesser General Public License
+  ~ as published by the Free Software Foundation; either version 2.1
+  ~ of the License, or (at your option) any later version.
+  ~
+  ~ This work is distributed in the hope that it will be useful, but
+  ~ without any warranty; without even the implied warranty of merchantability
+  ~ or fitness for a particular purpose. See the GNU Lesser General Public
+  ~ License for more details.
+  ~
+  ~ You should have received a copy of the GNU Lesser General Public License
+  ~ along with this library; if not, write to the Free Software Foundation, Inc.,
+  ~ 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA.
+  -->
+
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal">
+
+    <TextView
+        android:id="@+id/adapter_id"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="@dimen/text_margin"
+        android:textAppearance="?attr/textAppearanceListItem" />
+
+    <TextView
+        android:id="@+id/adapter_name"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="@dimen/text_margin"
+        android:textAppearance="?attr/textAppearanceListItem" />
+</LinearLayout>
