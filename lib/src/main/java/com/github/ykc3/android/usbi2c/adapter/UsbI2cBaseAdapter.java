@@ -38,7 +38,6 @@ abstract class UsbI2cBaseAdapter implements UsbI2cAdapter {
     private final UsbDevice usbDevice;
 
     private UsbDeviceConnection usbDeviceConnection;
-    private UsbInterface usbDeviceInterface;
 
     protected abstract class UsbI2cBaseDevice implements UsbI2cDevice {
         final int address;
@@ -107,17 +106,19 @@ abstract class UsbI2cBaseAdapter implements UsbI2cAdapter {
 
         usbDeviceConnection = i2cManager.getUsbManager().openDevice(usbDevice);
 
-        usbDeviceInterface = usbDevice.getInterface(0); // FIXME check presence?
-
-        if (!usbDeviceConnection.claimInterface(usbDeviceInterface, true)) {
-            throw new IOException("Can't claim interface");
+        for (int i = 0; i < usbDevice.getInterfaceCount(); i++) {
+            UsbInterface usbDeviceInterface = usbDevice.getInterface(i);
+            if (!usbDeviceConnection.claimInterface(usbDeviceInterface, true)) {
+                throw new IOException("Can't claim interface");
+            }
         }
     }
 
     @Override
     public void close() throws Exception {
         if (usbDeviceConnection != null) {
-            if (usbDeviceInterface != null) {
+            for (int i = 0; i < usbDevice.getInterfaceCount(); i++) {
+                UsbInterface usbDeviceInterface = usbDevice.getInterface(i);
                 usbDeviceConnection.releaseInterface(usbDeviceInterface);
             }
             usbDeviceConnection.close();
