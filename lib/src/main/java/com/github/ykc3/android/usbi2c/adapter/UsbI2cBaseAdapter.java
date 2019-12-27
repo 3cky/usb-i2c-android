@@ -27,6 +27,7 @@ import com.github.ykc3.android.usbi2c.UsbI2cDevice;
 import com.github.ykc3.android.usbi2c.UsbI2cManager;
 
 import java.io.IOException;
+import java.util.concurrent.locks.ReentrantLock;
 
 abstract class UsbI2cBaseAdapter implements UsbI2cAdapter {
     // Linux kernel flags
@@ -40,6 +41,12 @@ abstract class UsbI2cBaseAdapter implements UsbI2cAdapter {
     private UsbDeviceConnection usbDeviceConnection;
 
     protected abstract class UsbI2cBaseDevice implements UsbI2cDevice {
+        private static final int MAX_MESSAGE_SIZE = 8192;
+
+        private final byte[] buffer = new byte[MAX_MESSAGE_SIZE + 1];
+
+        private final ReentrantLock accessLock = new ReentrantLock();
+
         final int address;
 
         UsbI2cBaseDevice(int address) {
@@ -53,39 +60,99 @@ abstract class UsbI2cBaseAdapter implements UsbI2cAdapter {
 
         @Override
         public byte readRegByte(int reg) throws IOException {
-            byte[] buffer = new byte[1];
-            readRegBuffer(reg, buffer, buffer.length);
-            return buffer[0];
+            try {
+                accessLock.lock();
+                readRegBuffer(reg, buffer, 1);
+                return buffer[0];
+            } finally {
+                accessLock.unlock();
+            }
         }
 
         @Override
         public short readRegWord(int reg) throws IOException {
-            byte[] buffer = new byte[2];
-            readRegBuffer(reg, buffer, buffer.length);
-            return (short) ((buffer[0] & 0xFF) | (buffer[1] << 8));
+            try {
+                accessLock.lock();
+                readRegBuffer(reg, buffer, 2);
+                return (short) ((buffer[0] & 0xFF) | (buffer[1] << 8));
+            } finally {
+                accessLock.unlock();
+            }
         }
 
         @Override
         public void writeRegByte(int reg, byte data) throws IOException {
-            write(new byte[]{(byte) reg, data});
+            try {
+                accessLock.lock();
+                buffer[0] = (byte) reg;
+                buffer[1] = data;
+                write(buffer, 2);
+            } finally {
+                accessLock.unlock();
+            }
         }
 
         @Override
         public void writeRegWord(int reg, short data) throws IOException {
-            write(new byte[]{(byte) reg, (byte) data, (byte) (data >>> 8)});
+            try {
+                accessLock.lock();
+                buffer[0] = (byte) reg;
+                buffer[1] = (byte) data;
+                buffer[2] = (byte) (data >>> 8);
+                write(buffer, 3);
+            } finally {
+                accessLock.unlock();
+            }
         }
 
         @Override
         public void writeRegBuffer(int reg, byte[] buffer, int length) throws IOException {
-            byte[] data = new byte[length + 1];
-            data[0] = (byte) reg;
-            System.arraycopy(buffer, 0, data, 1, length);
-            write(data);
+            try {
+                accessLock.lock();
+                int len = Math.min(length, MAX_MESSAGE_SIZE);
+                buffer[0] = (byte) reg;
+                System.arraycopy(buffer, 0, this.buffer, 1, len);
+                write(this.buffer, len + 1);
+            } finally {
+                accessLock.unlock();
+            }
         }
 
-        protected void write(byte[] data) throws IOException {
-            write(data, data.length);
+        @Override
+        public void readRegBuffer(int reg, byte[] buffer, int length) throws IOException {
+            try {
+                accessLock.lock();
+                deviceReadReg(reg, buffer, length);
+            } finally {
+                accessLock.unlock();
+            }
         }
+
+        @Override
+        public void read(byte[] buffer, int length) throws IOException {
+            try {
+                accessLock.lock();
+                deviceRead(buffer, length);
+            } finally {
+                accessLock.unlock();
+            }
+        }
+
+        @Override
+        public void write(byte[] buffer, int length) throws IOException {
+            try {
+                accessLock.lock();
+                deviceWrite(buffer, length);
+            } finally {
+                accessLock.unlock();
+            }
+        }
+
+        protected abstract void deviceReadReg(int reg, byte[] buffer, int length) throws IOException;
+
+        protected abstract void deviceWrite(byte[] buffer, int length) throws IOException;
+
+        protected abstract void deviceRead(byte[] buffer, int length) throws IOException;
     }
 
     UsbI2cBaseAdapter(UsbI2cManager i2cManager, UsbDevice usbDevice) {

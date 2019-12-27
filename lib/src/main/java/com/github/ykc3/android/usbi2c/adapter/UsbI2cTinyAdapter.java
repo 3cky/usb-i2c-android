@@ -45,25 +45,27 @@ public class UsbI2cTinyAdapter extends UsbI2cBaseAdapter {
     private static final int USB_RECIP_INTERFACE = 0x01;
 
     class UsbI2cTinyDevice extends UsbI2cBaseDevice {
+        private final byte[] regBuffer = new byte[1];
+
         UsbI2cTinyDevice(int address) {
             super(address);
         }
 
         @Override
-        public void readRegBuffer(int reg, byte[] buffer, int length) throws IOException {
-            usbWrite(CMD_I2C_IO | CMD_I2C_IO_BEGIN, 0, address,
-                    new byte[]{(byte) reg}, 1);
+        protected void deviceReadReg(int reg, byte[] buffer, int length) throws IOException {
+            regBuffer[0] = (byte) reg;
+            usbWrite(CMD_I2C_IO | CMD_I2C_IO_BEGIN, 0, address, regBuffer, 1);
             usbRead(CMD_I2C_IO | CMD_I2C_IO_END, I2C_M_RD, address, buffer, length);
         }
 
         @Override
-        public void read(byte[] buffer, int length) throws IOException {
+        protected void deviceRead(byte[] buffer, int length) throws IOException {
             usbRead(CMD_I2C_IO | CMD_I2C_IO_BEGIN | CMD_I2C_IO_END, I2C_M_RD, address,
                     buffer, length);
         }
 
         @Override
-        public void write(byte[] buffer, int length) throws IOException {
+        protected void deviceWrite(byte[] buffer, int length) throws IOException {
             usbWrite(CMD_I2C_IO | CMD_I2C_IO_BEGIN | CMD_I2C_IO_END, 0, address,
                     buffer, length);
         }
