@@ -173,7 +173,8 @@ public class I2cDeviceListFragment extends Fragment {
                             }
                         });
                     } catch (IOException e) {
-                        Log.d(TAG, String.format("no I2C device found at 0x%02x", i2cAddress));
+                        Log.d(TAG, String.format("no I2C device found at 0x%02x (%s)",
+                                i2cAddress, e.getMessage()));
                     }
                     if (isCancelled()) {
                         break;
@@ -181,6 +182,7 @@ public class I2cDeviceListFragment extends Fragment {
                     publishProgress(i2cAddress);
                 }
             } catch (Exception e) {
+                // TODO Show scan error message
                 Log.e(TAG, "scan error", e);
             }
             return null;
