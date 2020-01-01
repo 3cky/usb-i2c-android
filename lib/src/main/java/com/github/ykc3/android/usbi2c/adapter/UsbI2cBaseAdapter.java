@@ -33,20 +33,20 @@ abstract class UsbI2cBaseAdapter implements UsbI2cAdapter {
     // Linux kernel flags
     static final int I2C_M_RD = 0x01; // read data, from slave to master
 
-    private static final int USB_TIMEOUT_MILLIS = 2000;
+    protected static final int USB_TIMEOUT_MILLIS = 1000;
 
-    private final UsbI2cManager i2cManager;
-    private final UsbDevice usbDevice;
+    protected final UsbI2cManager i2cManager;
+    protected final UsbDevice usbDevice;
 
-    private UsbDeviceConnection usbDeviceConnection;
+    protected UsbDeviceConnection usbDeviceConnection;
+
+    protected static final int MAX_MESSAGE_SIZE = 8192;
+
+    private final byte[] buffer = new byte[MAX_MESSAGE_SIZE + 1];
+
+    protected final ReentrantLock accessLock = new ReentrantLock();
 
     protected abstract class UsbI2cBaseDevice implements UsbI2cDevice {
-        private static final int MAX_MESSAGE_SIZE = 8192;
-
-        private final byte[] buffer = new byte[MAX_MESSAGE_SIZE + 1];
-
-        private final ReentrantLock accessLock = new ReentrantLock();
-
         final int address;
 
         UsbI2cBaseDevice(int address) {
@@ -111,8 +111,8 @@ abstract class UsbI2cBaseAdapter implements UsbI2cAdapter {
                 accessLock.lock();
                 int len = Math.min(length, MAX_MESSAGE_SIZE);
                 buffer[0] = (byte) reg;
-                System.arraycopy(buffer, 0, this.buffer, 1, len);
-                write(this.buffer, len + 1);
+                System.arraycopy(buffer, 0, UsbI2cBaseAdapter.this.buffer, 1, len);
+                write(UsbI2cBaseAdapter.this.buffer, len + 1);
             } finally {
                 accessLock.unlock();
             }
@@ -179,10 +179,18 @@ abstract class UsbI2cBaseAdapter implements UsbI2cAdapter {
                 throw new IOException("Can't claim interface");
             }
         }
+
+        openDevice(usbDevice);
+    }
+
+    protected void openDevice(UsbDevice usbDevice) throws IOException {
+        // Do nothing by default
     }
 
     @Override
     public void close() throws Exception {
+        closeDevice(usbDevice);
+
         if (usbDeviceConnection != null) {
             for (int i = 0; i < usbDevice.getInterfaceCount(); i++) {
                 UsbInterface usbDeviceInterface = usbDevice.getInterface(i);
@@ -190,6 +198,10 @@ abstract class UsbI2cBaseAdapter implements UsbI2cAdapter {
             }
             usbDeviceConnection.close();
         }
+    }
+
+    protected void closeDevice(UsbDevice usbDevice) throws IOException {
+        // Do nothing by default
     }
 
     @Override

@@ -19,4 +19,5 @@
 
 <resources>
     <usb-device vendor-id="1027" product-id="50737" /> <!-- i2c-tiny 0x403/0xC631 -->
+    <usb-device vendor-id="4292" product-id="60048" /> <!-- CP2112 0x10C4/0xEA90 -->
 </resources>
