@@ -32,6 +32,7 @@ public class Bme280Driver implements I2cDeviceDriver {
     private static final int REG_DIG_H2 = 0xE1;
     private static final int REG_CHIP_ID = 0xD0;
     private static final int REG_CTRL_HUM = 0xF2;
+    private static final int REG_STATUS = 0xF3;
     private static final int REG_CTRL_MEAS = 0xF4;
     private static final int REG_CONFIG = 0xF5;
     private static final int REG_DATA = 0xF7;
@@ -147,6 +148,15 @@ public class Bme280Driver implements I2cDeviceDriver {
         // Select config register
         // Stand_by time = 1000 ms
         device.writeRegByte(REG_CONFIG, (byte) 0xA0);
+
+        // Wait for conversion completion
+        while ((device.readRegByte(REG_STATUS) & 0x08) != 0) {
+            try {
+                Thread.sleep(1);
+            } catch (InterruptedException ie) {
+                throw new IOException(ie);
+            }
+        }
 
         // Read 8 bytes of data from address 0xF7 (247)
         // pressure msb1, pressure msb, pressure lsb, temp msb1, temp msb, temp lsb, humidity lsb, humidity msb
