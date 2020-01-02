@@ -1,1 +1,1 @@
-# i2c-usb-android
+# usb-i2c-android
