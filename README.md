@@ -1,5 +1,7 @@
 # usb-i2c-android
 
+[![](https://jitpack.io/v/3cky/usb-i2c-android.svg)](https://jitpack.io/#3cky/usb-i2c-android)
+
 This is a library for communication with [I²C](https://en.wikipedia.org/wiki/I%C2%B2C) devices on Android using USB I²C adapters connected to the
 [Android USB Host (OTG)](http://developer.android.com/guide/topics/connectivity/usb/host.html). 
 No root access or special kernel drivers are required.
@@ -23,7 +25,7 @@ allprojects {
 Add library to dependencies:
 ```gradle
 dependencies {
-    implementation 'com.github.3cky:usb-i2c-android:1.0'
+    implementation 'com.github.3cky:usb-i2c-android:v1.0'
 }
 ```
 
