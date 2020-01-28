@@ -3,7 +3,7 @@ apply plugin: 'com.github.dcendents.android-maven'
 
 project.archivesBaseName='usb-i2c-android'
 group='com.github.3cky'
-version='1.0'
+version='1.0.1'
 
 android {
     compileSdkVersion 29

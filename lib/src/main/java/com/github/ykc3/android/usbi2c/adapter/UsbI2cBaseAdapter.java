@@ -110,7 +110,7 @@ abstract class UsbI2cBaseAdapter implements UsbI2cAdapter {
             try {
                 accessLock.lock();
                 int len = Math.min(length, MAX_MESSAGE_SIZE);
-                buffer[0] = (byte) reg;
+                UsbI2cBaseAdapter.this.buffer[0] = (byte) reg;
                 System.arraycopy(buffer, 0, UsbI2cBaseAdapter.this.buffer, 1, len);
                 write(UsbI2cBaseAdapter.this.buffer, len + 1);
             } finally {
