@@ -11,7 +11,7 @@
         android:supportsRtl="true"
         android:allowBackup="true"
         android:theme="@style/AppTheme"
-        android:fullBackupContent="">
+        android:fullBackupContent="true">
         <activity
             android:name=".I2cAdapterListActivity"
             android:label="@string/title_adapter_list"
