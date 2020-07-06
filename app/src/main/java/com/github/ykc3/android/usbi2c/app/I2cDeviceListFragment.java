@@ -26,6 +26,8 @@ import android.os.AsyncTask;
 import android.os.Handler;
 import androidx.annotation.NonNull;
 import android.os.Bundle;
+
+import com.github.ykc3.android.usbi2c.app.view.CustomRecyclerView;
 import com.google.android.material.snackbar.Snackbar;
 import androidx.fragment.app.Fragment;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
@@ -66,12 +68,14 @@ public class I2cDeviceListFragment extends Fragment {
 
     private I2cDeviceProber i2cDeviceProber;
 
+    private CustomRecyclerView recyclerView;
     private RecyclerViewAdapter recyclerViewAdapter;
+
     private SwipeRefreshLayout deviceListRefreshLayout;
 
     private AsyncTask<UsbDevice, Integer, Integer> scanI2cDevicesTask;
 
-    public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapter.ViewHolder> {
+    public static class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapter.ViewHolder> {
         private List<Item> items = new ArrayList<>();
 
         private final View.OnClickListener onClickListener = new View.OnClickListener() {
@@ -81,7 +85,7 @@ public class I2cDeviceListFragment extends Fragment {
             }
         };
 
-        private class Item {
+        private static class Item {
             final int deviceAddress;
             final String deviceInfo;
 
@@ -127,7 +131,7 @@ public class I2cDeviceListFragment extends Fragment {
             return items.size();
         }
 
-        class ViewHolder extends RecyclerView.ViewHolder {
+        static class ViewHolder extends RecyclerView.ViewHolder {
             final TextView deviceAddressView;
             final TextView deviceInfoView;
 
@@ -202,6 +206,7 @@ public class I2cDeviceListFragment extends Fragment {
 
         @Override
         protected void onPreExecute() {
+            fragment.recyclerView.showEmptyView(false);
             fragment.recyclerViewAdapter.clearItems();
             snackbar = Snackbar.make(fragment.deviceListRefreshLayout,
                     fragment.getResources().getString(R.string.device_scan_info, MIN_I2C_ADDRESS),
@@ -218,6 +223,7 @@ public class I2cDeviceListFragment extends Fragment {
         private void dismissUiProgressItems() {
             new Handler().postDelayed(new Runnable() {
                 @Override public void run() {
+                    fragment.recyclerView.showEmptyView(fragment.recyclerView.isEmpty());
                     fragment.deviceListRefreshLayout.setRefreshing(false);
                     snackbar.dismiss();
                 }
@@ -284,9 +290,11 @@ public class I2cDeviceListFragment extends Fragment {
                              Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.device_list, container, false);
 
-        RecyclerView recyclerView = rootView.findViewById(R.id.device_list);
+        recyclerView = rootView.findViewById(R.id.device_list);
         recyclerViewAdapter = new RecyclerViewAdapter();
         recyclerView.setAdapter(recyclerViewAdapter);
+        recyclerView.setEmptyView(rootView.findViewById(R.id.empty_device_list));
+        recyclerView.showEmptyView(false);
 
         deviceListRefreshLayout = rootView.findViewById(R.id.device_list_refresh);
         final SwipeRefreshLayout.OnRefreshListener onRefreshListener = new SwipeRefreshLayout.OnRefreshListener() {

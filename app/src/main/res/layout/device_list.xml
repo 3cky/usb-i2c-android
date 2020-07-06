@@ -23,16 +23,33 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <androidx.recyclerview.widget.RecyclerView
-        xmlns:app="http://schemas.android.com/apk/res-auto"
-        xmlns:tools="http://schemas.android.com/tools"
-        android:id="@+id/device_list"
+    <FrameLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_marginLeft="16dp"
-        android:layout_marginRight="16dp"
-        app:layoutManager="LinearLayoutManager"
-        tools:context=".I2cDeviceListFragment"
-        tools:listitem="@layout/device_list_content" />
+        android:layout_height="match_parent">
+
+        <com.github.ykc3.android.usbi2c.app.view.CustomRecyclerView
+            xmlns:app="http://schemas.android.com/apk/res-auto"
+            xmlns:tools="http://schemas.android.com/tools"
+            android:id="@+id/device_list"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginLeft="16dp"
+            android:layout_marginRight="16dp"
+            app:layoutManager="LinearLayoutManager"
+            tools:context=".I2cDeviceListFragment"
+            tools:listitem="@layout/device_list_content" />
+
+        <TextView
+            android:id="@+id/empty_device_list"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="25dp"
+            android:text="@string/empty_device_list"
+            android:textStyle="italic"
+            android:textAlignment="center"
+            android:layout_gravity="top|center_horizontal"
+            android:visibility="gone" />
+
+    </FrameLayout>
 
 </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>

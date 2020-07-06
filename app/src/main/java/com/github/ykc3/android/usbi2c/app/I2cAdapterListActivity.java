@@ -32,6 +32,8 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.appcompat.widget.Toolbar;
+
+import com.github.ykc3.android.usbi2c.app.view.CustomRecyclerView;
 import com.google.android.material.snackbar.Snackbar;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -42,6 +44,7 @@ import android.widget.TextView;
 import com.github.ykc3.android.usbi2c.UsbI2cAdapter;
 import com.github.ykc3.android.usbi2c.UsbI2cManager;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -65,6 +68,7 @@ public class I2cAdapterListActivity extends AppCompatActivity {
     private UsbManager usbManager;
     private UsbI2cManager usbI2cManager;
 
+    private CustomRecyclerView recyclerView;
     private RecyclerViewAdapter recyclerViewAdapter;
 
     private PendingIntent usbPermissionIntent;
@@ -91,7 +95,7 @@ public class I2cAdapterListActivity extends AppCompatActivity {
     };
 
     public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapter.ViewHolder> {
-        private List<UsbI2cAdapter> items;
+        private List<UsbI2cAdapter> items = new ArrayList<>();;
 
         private final View.OnClickListener onClickListener = new View.OnClickListener() {
             @Override
@@ -101,12 +105,14 @@ public class I2cAdapterListActivity extends AppCompatActivity {
             }
         };
 
-        RecyclerViewAdapter(List<UsbI2cAdapter> items) {
-            this.items = items;
+        void updateItems(List<UsbI2cAdapter> items) {
+            this.items.clear();
+            this.items.addAll(items);
+            notifyDataSetChanged();
         }
 
-        void updateItems(List<UsbI2cAdapter> items) {
-            this.items = items;
+        void clearItems() {
+            items.clear();
             notifyDataSetChanged();
         }
 
@@ -179,9 +185,11 @@ public class I2cAdapterListActivity extends AppCompatActivity {
             isTwoPane = true;
         }
 
-        RecyclerView recyclerView = findViewById(R.id.adapter_list);
-        recyclerViewAdapter = new RecyclerViewAdapter(Collections.EMPTY_LIST);
+        recyclerView = findViewById(R.id.adapter_list);
+        recyclerViewAdapter = new RecyclerViewAdapter();
         recyclerView.setAdapter(recyclerViewAdapter);
+        recyclerView.setEmptyView(findViewById(R.id.empty_adapter_list));
+        recyclerView.showEmptyView(false);
 
         usbManager = (UsbManager) getSystemService(Context.USB_SERVICE);
         assert usbManager != null;
@@ -197,12 +205,15 @@ public class I2cAdapterListActivity extends AppCompatActivity {
         final SwipeRefreshLayout.OnRefreshListener onRefreshListener = new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
+                recyclerViewAdapter.clearItems();
+                recyclerView.showEmptyView(false);
                 final Snackbar snackbar = Snackbar.make(adapterListRefreshLayout,
                         R.string.adapter_scan_info, Snackbar.LENGTH_INDEFINITE);
                 snackbar.show();
-                scanI2cAdapters();
                 new Handler().postDelayed(new Runnable() {
                     @Override public void run() {
+                        scanI2cAdapters();
+                        recyclerView.showEmptyView(recyclerView.isEmpty());
                         adapterListRefreshLayout.setRefreshing(false);
                         snackbar.dismiss();
                     }
