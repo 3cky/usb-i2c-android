@@ -16,13 +16,17 @@
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA.
  */
 
-package com.github.ykc3.android.usbi2c.app.device.driver;
+package com.github.ykc3.android.usbi2c.app.device.handler;
+
+import android.annotation.SuppressLint;
 
 import com.github.ykc3.android.usbi2c.UsbI2cDevice;
 
 import java.io.IOException;
 
-public class Bme280Driver implements I2cDeviceDriver {
+public class Bme280Handler implements I2cDeviceHandler {
+    private static final String DEVICE_PART_NUMBER = "BME280";
+
     private static final int[] I2C_ADDRESSES = {0x76, 0x77};
 
     private static final int CHIP_ID = 0x60;
@@ -38,12 +42,17 @@ public class Bme280Driver implements I2cDeviceDriver {
     private static final int REG_DATA = 0xF7;
 
     @Override
+    public String getDevicePartNumber() {
+        return DEVICE_PART_NUMBER;
+    }
+
+    @Override
     public int[] getRelatedAddresses() {
         return I2C_ADDRESSES;
     }
 
     @Override
-    public boolean isRelatedAddress(int address) {
+    public boolean isAddressRelated(int address) {
         for (int addr: getRelatedAddresses()) {
             if (addr == address) {
                 return true;
@@ -53,7 +62,7 @@ public class Bme280Driver implements I2cDeviceDriver {
     }
 
     @Override
-    public boolean isDetected(UsbI2cDevice device) {
+    public boolean isDeviceSupported(UsbI2cDevice device) {
         try {
             return (device.readRegByte(REG_CHIP_ID) == CHIP_ID);
         } catch (IOException e) {
@@ -62,8 +71,9 @@ public class Bme280Driver implements I2cDeviceDriver {
         return false;
     }
 
+    @SuppressLint("DefaultLocale")
     @Override
-    public String getInfo(UsbI2cDevice device) throws IOException {
+    public String getDeviceDescriptor(UsbI2cDevice device) throws IOException {
         // https://github.com/ControlEverythingCommunity/BME280/blob/master/Java/BME280.java
         byte[] b1 = new byte[24];
         device.readRegBuffer(REG_TEMP_PRESS_CALIB_DATA, b1, 24);
@@ -202,6 +212,6 @@ public class Bme280Driver implements I2cDeviceDriver {
             humidity = 0.0;
         }
 
-        return String.format("BME280 (%.1f°C/%.1f%% RH/%.1f hPa)", temp, humidity, pressure);
+        return String.format("%.1f°C/%.1f%% RH/%.1f hPa", temp, humidity, pressure);
     }
 }

@@ -16,15 +16,20 @@
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA.
  */
 
-package com.github.ykc3.android.usbi2c.app.device.driver;
+package com.github.ykc3.android.usbi2c.app.device.handler;
 
 import com.github.ykc3.android.usbi2c.UsbI2cDevice;
 
 import java.io.IOException;
 
-public interface I2cDeviceDriver {
+public interface I2cDeviceHandler {
+    String getDevicePartNumber();
+
     int[] getRelatedAddresses();
-    boolean isRelatedAddress(int address);
-    boolean isDetected(UsbI2cDevice device);
-    String getInfo(UsbI2cDevice device) throws IOException;
+
+    boolean isAddressRelated(int address);
+
+    boolean isDeviceSupported(UsbI2cDevice device);
+
+    String getDeviceDescriptor(UsbI2cDevice device) throws IOException;
 }

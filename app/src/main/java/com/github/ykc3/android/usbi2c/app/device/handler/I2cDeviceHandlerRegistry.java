@@ -16,36 +16,35 @@
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA.
  */
 
-package com.github.ykc3.android.usbi2c.app.device;
+package com.github.ykc3.android.usbi2c.app.device.handler;
 
 import com.github.ykc3.android.usbi2c.UsbI2cDevice;
-import com.github.ykc3.android.usbi2c.app.device.driver.Bme280Driver;
-import com.github.ykc3.android.usbi2c.app.device.driver.I2cDeviceDriver;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class I2cDeviceProber {
-    private final List<I2cDeviceDriver> i2cDeviceDrivers;
+public class I2cDeviceHandlerRegistry {
+    private final List<I2cDeviceHandler> deviceHandlers;
 
-    public I2cDeviceProber(List<I2cDeviceDriver> i2cDeviceDrivers) {
-        this.i2cDeviceDrivers = i2cDeviceDrivers;
+    public I2cDeviceHandlerRegistry(List<I2cDeviceHandler> deviceHandlers) {
+        this.deviceHandlers = deviceHandlers;
     }
 
-    public I2cDeviceProber() {
-        this(getDefaultI2cDeviceDriverList());
+    public I2cDeviceHandlerRegistry() {
+        this(getDefaultI2cDeviceHandlerList());
     }
 
-    public static List<I2cDeviceDriver> getDefaultI2cDeviceDriverList() {
-        List<I2cDeviceDriver> driverList = new ArrayList<>();
-        driverList.add(new Bme280Driver());
-        return driverList;
+    public static List<I2cDeviceHandler> getDefaultI2cDeviceHandlerList() {
+        List<I2cDeviceHandler> deviceHandlers = new ArrayList<>();
+        deviceHandlers.add(new Bme280Handler());
+        return deviceHandlers;
     }
 
-    public I2cDeviceDriver findDriver(UsbI2cDevice device) {
-        for (I2cDeviceDriver driver: i2cDeviceDrivers) {
-            if (driver.isRelatedAddress(device.getAddress()) && driver.isDetected(device)) {
-                return driver;
+    public I2cDeviceHandler findDeviceHandler(UsbI2cDevice device) {
+        for (I2cDeviceHandler handler: deviceHandlers) {
+            if (handler.isAddressRelated(device.getAddress())
+                    && handler.isDeviceSupported(device)) {
+                return handler;
             }
         }
         return null;

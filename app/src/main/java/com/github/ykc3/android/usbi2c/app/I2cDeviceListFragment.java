@@ -20,13 +20,17 @@ package com.github.ykc3.android.usbi2c.app;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbManager;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Handler;
 import androidx.annotation.NonNull;
 import android.os.Bundle;
 
+import com.github.ykc3.android.usbi2c.app.device.info.I2cDeviceInfo;
+import com.github.ykc3.android.usbi2c.app.device.info.I2cDeviceInfoRegistry;
 import com.github.ykc3.android.usbi2c.app.view.CustomRecyclerView;
 import com.google.android.material.snackbar.Snackbar;
 import androidx.fragment.app.Fragment;
@@ -41,8 +45,9 @@ import android.widget.TextView;
 import com.github.ykc3.android.usbi2c.UsbI2cAdapter;
 import com.github.ykc3.android.usbi2c.UsbI2cDevice;
 import com.github.ykc3.android.usbi2c.UsbI2cManager;
-import com.github.ykc3.android.usbi2c.app.device.driver.I2cDeviceDriver;
-import com.github.ykc3.android.usbi2c.app.device.I2cDeviceProber;
+
+import com.github.ykc3.android.usbi2c.app.device.handler.I2cDeviceHandler;
+import com.github.ykc3.android.usbi2c.app.device.handler.I2cDeviceHandlerRegistry;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -66,7 +71,8 @@ public class I2cDeviceListFragment extends Fragment {
 
     private UsbI2cManager usbI2cManager;
 
-    private I2cDeviceProber i2cDeviceProber;
+    private I2cDeviceHandlerRegistry i2cDeviceHandlerRegistry;
+    private I2cDeviceInfoRegistry i2cDeviceInfoRegistry;
 
     private CustomRecyclerView recyclerView;
     private RecyclerViewAdapter recyclerViewAdapter;
@@ -75,36 +81,81 @@ public class I2cDeviceListFragment extends Fragment {
 
     private AsyncTask<UsbDevice, Integer, Integer> scanI2cDevicesTask;
 
-    public static class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapter.ViewHolder> {
-        private List<Item> items = new ArrayList<>();
+    private static class DeviceItem {
+        final int deviceAddress;
+        final List<I2cDeviceInfo> candidateDeviceInfos;
+        final boolean isDeviceRecognized;
+        final I2cDeviceInfo recognizedDeviceInfo;
+        final String deviceDescriptor;
 
-        private final View.OnClickListener onClickListener = new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                // TODO
-            }
-        };
-
-        private static class Item {
-            final int deviceAddress;
-            final String deviceInfo;
-
-            Item(int deviceAddress, String deviceInfo) {
-                this.deviceAddress = deviceAddress;
-                this.deviceInfo = deviceInfo;
-            }
+        DeviceItem(int deviceAddress, List<I2cDeviceInfo> candidateDeviceInfos,
+                   boolean isDeviceRecognized, I2cDeviceInfo recognizedDeviceInfo,
+                   String deviceDescriptor) {
+            this.deviceAddress = deviceAddress;
+            this.candidateDeviceInfos = candidateDeviceInfos;
+            this.isDeviceRecognized = isDeviceRecognized;
+            this.recognizedDeviceInfo = recognizedDeviceInfo;
+            this.deviceDescriptor = deviceDescriptor;
         }
 
-        RecyclerViewAdapter() {
+        String getDeviceHexAddress() {
+            return String.format("0x%02x", deviceAddress);
         }
 
-        void addItem(int deviceAddress, String deviceInfo) {
-            items.add(new Item(deviceAddress, deviceInfo));
-            notifyItemInserted(items.size() - 1);
+        String getDeviceInfo() {
+            StringBuilder builder = new StringBuilder();
+            if (isDeviceRecognized && recognizedDeviceInfo != null) {
+                builder.append(recognizedDeviceInfo.getPartNumber());
+                if (deviceDescriptor != null && !deviceDescriptor.isEmpty()) {
+                    builder.append(" (");
+                    builder.append(deviceDescriptor);
+                    builder.append(")");
+                }
+            } else if (candidateDeviceInfos != null && !candidateDeviceInfos.isEmpty()) {
+                for (I2cDeviceInfo deviceInfo : candidateDeviceInfos) {
+                    builder.append(deviceInfo.getPartNumber());
+                    builder.append(' ');
+                }
+            }
+            return (builder.length() > 0) ? builder.toString() : null;
+        }
+
+        String getDevicePage() {
+            StringBuilder builder = new StringBuilder("https://i2cdevices.org/");
+            if (isDeviceRecognized && recognizedDeviceInfo != null) {
+                builder.append("devices/");
+                builder.append(recognizedDeviceInfo.getPartNumber().toLowerCase());
+            } else {
+                builder.append("addresses/");
+                builder.append(getDeviceHexAddress());
+            }
+            return builder.toString();
+        }
+    }
+
+    private final View.OnClickListener onDeviceItemClickListener = new View.OnClickListener() {
+        @Override
+        public void onClick(View view) {
+            if (view.getTag() == null) {
+                return;
+            }
+            DeviceItem clickedDeviceItem = (DeviceItem) view.getTag();
+            Intent browserIntent = new Intent(Intent.ACTION_VIEW,
+                    Uri.parse(clickedDeviceItem.getDevicePage()));
+            I2cDeviceListFragment.this.startActivity(browserIntent);
+        }
+    };
+
+    public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapter.ViewHolder> {
+        private List<DeviceItem> deviceItems = new ArrayList<>();
+
+        void addItem(DeviceItem item) {
+            deviceItems.add(item);
+            notifyItemInserted(deviceItems.size() - 1);
         }
 
         void clearItems() {
-            items.clear();
+            deviceItems.clear();
             notifyDataSetChanged();
         }
 
@@ -118,20 +169,22 @@ public class I2cDeviceListFragment extends Fragment {
 
         @Override
         public void onBindViewHolder(@NonNull final ViewHolder holder, int position) {
-            Item item = items.get(position);
-            holder.deviceAddressView.setText(String.format("0x%02x", item.deviceAddress));
-            holder.deviceInfoView.setText(item.deviceInfo);
+            DeviceItem deviceItem = deviceItems.get(position);
+            holder.deviceAddressView.setText(deviceItem.getDeviceHexAddress());
+            String deviceInfo = deviceItem.getDeviceInfo();
+            holder.deviceInfoView.setText(deviceInfo != null ? deviceInfo :
+                    getString(R.string.unknown_device));
 
-            holder.itemView.setTag(items.get(position));
-            holder.itemView.setOnClickListener(onClickListener);
+            holder.itemView.setTag(deviceItems.get(position));
+            holder.itemView.setOnClickListener(onDeviceItemClickListener);
         }
 
         @Override
         public int getItemCount() {
-            return items.size();
+            return deviceItems.size();
         }
 
-        static class ViewHolder extends RecyclerView.ViewHolder {
+        class ViewHolder extends RecyclerView.ViewHolder {
             final TextView deviceAddressView;
             final TextView deviceInfoView;
 
@@ -168,12 +221,11 @@ public class I2cDeviceListFragment extends Fragment {
                         if (activity == null) {
                             break;
                         }
-                        final int foundI2cAddress = i2cAddress;
-                        final String deviceInfo = getI2cDeviceInfo(fragment.i2cDeviceProber, i2cDevice);
+                        final DeviceItem deviceItem = getDeviceItem(i2cDevice);
                         activity.runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
-                                fragment.recyclerViewAdapter.addItem(foundI2cAddress, deviceInfo);
+                                fragment.recyclerViewAdapter.addItem(deviceItem);
                             }
                         });
                     } catch (IOException e) {
@@ -192,16 +244,35 @@ public class I2cDeviceListFragment extends Fragment {
             return null;
         }
 
-        String getI2cDeviceInfo(I2cDeviceProber i2cDeviceProber, UsbI2cDevice i2cDevice) {
-            I2cDeviceDriver deviceDriver = i2cDeviceProber.findDriver(i2cDevice);
-            if (deviceDriver != null) {
+        DeviceItem getDeviceItem(UsbI2cDevice i2cDevice) {
+            boolean isDeviceRecognized = false;
+            List<I2cDeviceInfo> candidateDeviceInfos = null;
+            I2cDeviceInfo recognizedDeviceInfo = null;
+            String deviceDescriptor = null;
+
+            // First trying to find handler for concrete I2C device with given address
+            I2cDeviceHandler deviceHandler = fragment.i2cDeviceHandlerRegistry.findDeviceHandler(
+                    i2cDevice);
+            if (deviceHandler != null) {
+                isDeviceRecognized = true;
+                recognizedDeviceInfo = fragment.i2cDeviceInfoRegistry.findDeviceByPartNumber(
+                        deviceHandler.getDevicePartNumber());
                 try {
-                    return deviceDriver.getInfo(i2cDevice);
+                    // Handler found, trying to use it to get I2C device info
+                    deviceDescriptor = deviceHandler.getDeviceDescriptor(i2cDevice);
                 } catch (IOException e) {
                     Log.e(TAG,"can't get device info", e);
                 }
+            } else {
+                // No device handler found, check for list of all known I2C devices w/ this address
+                if (fragment.i2cDeviceInfoRegistry != null) {
+                    candidateDeviceInfos = fragment.i2cDeviceInfoRegistry.findDevicesByAddress(
+                            i2cDevice.getAddress());
+                }
             }
-            return fragment.getString(R.string.unknown_device);
+
+            return new DeviceItem(i2cDevice.getAddress(), candidateDeviceInfos, isDeviceRecognized,
+                    recognizedDeviceInfo, deviceDescriptor);
         }
 
         @Override
@@ -277,7 +348,14 @@ public class I2cDeviceListFragment extends Fragment {
 
         usbI2cManager = UsbI2cManager.create(usbManager).build();
 
-        i2cDeviceProber = new I2cDeviceProber();
+        i2cDeviceHandlerRegistry = new I2cDeviceHandlerRegistry();
+
+        try {
+            i2cDeviceInfoRegistry = I2cDeviceInfoRegistry.createFromResource(getResources(),
+                    R.raw.devices);
+        } catch (IOException e) {
+            Log.e(TAG, "Can't create I2C device info registry", e);
+        }
 
 //        CollapsingToolbarLayout appBarLayout = activity.findViewById(R.id.toolbar_layout);
 //        if (appBarLayout != null) {

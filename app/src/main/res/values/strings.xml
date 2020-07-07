@@ -4,7 +4,7 @@
     <string name="title_device_list">I2C Devices</string>
     <string name="adapter_scan_info">Scanning for USB I2C adapters…</string>
     <string name="device_scan_info">Scanning I2C address: 0x%1$02x</string>
-    <string name="unknown_device">Unknown Device</string>
+    <string name="unknown_device">Unknown device</string>
     <string name="empty_adapter_list">No USB I2C adapters found\n(pull to refresh)</string>
     <string name="empty_device_list">No I2C devices found\n(pull to refresh)</string>
 </resources>
