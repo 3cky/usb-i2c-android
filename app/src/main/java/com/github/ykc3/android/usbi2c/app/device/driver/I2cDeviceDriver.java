@@ -16,7 +16,7 @@
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA.
  */
 
-package com.github.ykc3.android.usbi2c.app.driver;
+package com.github.ykc3.android.usbi2c.app.device.driver;
 
 import com.github.ykc3.android.usbi2c.UsbI2cDevice;
 

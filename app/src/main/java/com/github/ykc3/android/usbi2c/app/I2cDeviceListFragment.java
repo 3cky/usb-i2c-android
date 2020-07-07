@@ -41,8 +41,8 @@ import android.widget.TextView;
 import com.github.ykc3.android.usbi2c.UsbI2cAdapter;
 import com.github.ykc3.android.usbi2c.UsbI2cDevice;
 import com.github.ykc3.android.usbi2c.UsbI2cManager;
-import com.github.ykc3.android.usbi2c.app.driver.I2cDeviceDriver;
-import com.github.ykc3.android.usbi2c.app.driver.I2cDeviceProber;
+import com.github.ykc3.android.usbi2c.app.device.driver.I2cDeviceDriver;
+import com.github.ykc3.android.usbi2c.app.device.I2cDeviceProber;
 
 import java.io.IOException;
 import java.util.ArrayList;

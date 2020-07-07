@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Victor Antonovich <v.antonovich@gmail.com>
+ * Copyright (c) 2020 Victor Antonovich <v.antonovich@gmail.com>
  *
  * This work is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public License
@@ -16,9 +16,11 @@
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA.
  */
 
-package com.github.ykc3.android.usbi2c.app.driver;
+package com.github.ykc3.android.usbi2c.app.device;
 
 import com.github.ykc3.android.usbi2c.UsbI2cDevice;
+import com.github.ykc3.android.usbi2c.app.device.driver.Bme280Driver;
+import com.github.ykc3.android.usbi2c.app.device.driver.I2cDeviceDriver;
 
 import java.util.ArrayList;
 import java.util.List;
