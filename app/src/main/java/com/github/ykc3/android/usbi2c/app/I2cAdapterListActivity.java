@@ -27,25 +27,24 @@ import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbManager;
 import android.os.Bundle;
 import android.os.Handler;
-import androidx.annotation.NonNull;
-import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.recyclerview.widget.RecyclerView;
-import androidx.appcompat.widget.Toolbar;
-
-import com.github.ykc3.android.usbi2c.app.view.CustomRecyclerView;
-import com.google.android.material.snackbar.Snackbar;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
+import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
+
 import com.github.ykc3.android.usbi2c.UsbI2cAdapter;
 import com.github.ykc3.android.usbi2c.UsbI2cManager;
+import com.github.ykc3.android.usbi2c.app.view.CustomRecyclerView;
+import com.google.android.material.snackbar.Snackbar;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 /**
@@ -71,6 +70,8 @@ public class I2cAdapterListActivity extends AppCompatActivity {
     private CustomRecyclerView recyclerView;
     private RecyclerViewAdapter recyclerViewAdapter;
 
+    SwipeRefreshLayout adapterListRefreshLayout;
+
     private PendingIntent usbPermissionIntent;
 
     private static final String ACTION_USB_PERMISSION =
@@ -90,6 +91,9 @@ public class I2cAdapterListActivity extends AppCompatActivity {
                         Log.d(TAG, "permission denied for device " + usbDevice);
                     }
                 }
+            } else if (UsbManager.ACTION_USB_DEVICE_ATTACHED.equals(action)
+                    || UsbManager.ACTION_USB_DEVICE_DETACHED.equals(action)) {
+                refreshAdapterList();
             }
         }
     };
@@ -152,6 +156,25 @@ public class I2cAdapterListActivity extends AppCompatActivity {
         }
     }
 
+    SwipeRefreshLayout.OnRefreshListener onRefreshListener = new SwipeRefreshLayout.OnRefreshListener() {
+        @Override
+        public void onRefresh() {
+            recyclerViewAdapter.clearItems();
+            recyclerView.showEmptyView(false);
+            final Snackbar snackbar = Snackbar.make(adapterListRefreshLayout,
+                    R.string.adapter_scan_info, Snackbar.LENGTH_INDEFINITE);
+            snackbar.show();
+            new Handler().postDelayed(new Runnable() {
+                @Override public void run() {
+                    scanI2cAdapters();
+                    recyclerView.showEmptyView(recyclerView.isEmpty());
+                    adapterListRefreshLayout.setRefreshing(false);
+                    snackbar.dismiss();
+                }
+            }, 1000);
+        }
+    };
+
     protected void showI2cDeviceListPane(Context context, UsbDevice usbDevice) {
         if (isTwoPane) {
             Bundle arguments = new Bundle();
@@ -198,36 +221,26 @@ public class I2cAdapterListActivity extends AppCompatActivity {
 
         usbPermissionIntent = PendingIntent.getBroadcast(this, 0,
                 new Intent(ACTION_USB_PERMISSION), 0);
-        IntentFilter filter = new IntentFilter(ACTION_USB_PERMISSION);
-        registerReceiver(usbReceiver, filter);
+        IntentFilter usbReceiverFilter = new IntentFilter(ACTION_USB_PERMISSION);
+        usbReceiverFilter.addAction(UsbManager.ACTION_USB_DEVICE_ATTACHED);
+        usbReceiverFilter.addAction(UsbManager.ACTION_USB_DEVICE_DETACHED);
+        registerReceiver(usbReceiver, usbReceiverFilter);
 
-        final SwipeRefreshLayout adapterListRefreshLayout = findViewById(R.id.adapter_list_refresh);
-        final SwipeRefreshLayout.OnRefreshListener onRefreshListener = new SwipeRefreshLayout.OnRefreshListener() {
-            @Override
-            public void onRefresh() {
-                recyclerViewAdapter.clearItems();
-                recyclerView.showEmptyView(false);
-                final Snackbar snackbar = Snackbar.make(adapterListRefreshLayout,
-                        R.string.adapter_scan_info, Snackbar.LENGTH_INDEFINITE);
-                snackbar.show();
-                new Handler().postDelayed(new Runnable() {
-                    @Override public void run() {
-                        scanI2cAdapters();
-                        recyclerView.showEmptyView(recyclerView.isEmpty());
-                        adapterListRefreshLayout.setRefreshing(false);
-                        snackbar.dismiss();
-                    }
-                }, 1000);
-            }
-        };
+        adapterListRefreshLayout = findViewById(R.id.adapter_list_refresh);
         adapterListRefreshLayout.setOnRefreshListener(onRefreshListener);
 
-        adapterListRefreshLayout.post(new Runnable() {
-            @Override public void run() {
-                adapterListRefreshLayout.setRefreshing(true);
-                onRefreshListener.onRefresh();
-            }
-        });
+        refreshAdapterList();
+    }
+
+    void refreshAdapterList() {
+        if (adapterListRefreshLayout != null) {
+            adapterListRefreshLayout.post(new Runnable() {
+                @Override public void run() {
+                    adapterListRefreshLayout.setRefreshing(true);
+                    onRefreshListener.onRefresh();
+                }
+            });
+        }
     }
 
     void scanI2cAdapters() {
