@@ -10,6 +10,7 @@ No root access or special kernel drivers are required.
 
 * [I2C-Tiny-USB](https://github.com/harbaum/I2C-Tiny-USB)
 * [Silicon Labs CP2112](http://www.silabs.com/Support%20Documents/TechnicalDocs/CP2112.pdf)
+* [Qinheng Microelectronics CH341](http://www.wch-ic.com/products/CH341.html)
 
 ## Usage
 
