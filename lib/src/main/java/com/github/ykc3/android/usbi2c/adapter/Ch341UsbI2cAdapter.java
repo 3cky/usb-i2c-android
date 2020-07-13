@@ -34,7 +34,7 @@ import java.io.IOException;
  * CH341 is a USB bus convert chip, providing UART, printer port, parallel and synchronous serial with
  * 2-wire or 4-wire through USB bus (http://www.anok.ceti.pl/download/ch341ds1.pdf).
  */
-public class UsbI2cCh341Adapter extends UsbI2cBaseAdapter {
+public class Ch341UsbI2cAdapter extends BaseUsbI2cAdapter {
     private static final int CH341_I2C_LOW_SPEED = 0;      // low speed - 20kHz
     private static final int CH341_I2C_STANDARD_SPEED = 1; // standard speed - 100kHz
     private static final int CH341_I2C_FAST_SPEED = 2;     // fast speed - 400kHz
@@ -58,8 +58,8 @@ public class UsbI2cCh341Adapter extends UsbI2cBaseAdapter {
     private UsbEndpoint usbReadEndpoint;
     private UsbEndpoint usbWriteEndpoint;
 
-    class UsbI2cCh341Device extends UsbI2cBaseDevice {
-        UsbI2cCh341Device(int address) {
+    class Ch341UsbI2cDevice extends BaseUsbI2cDevice {
+        Ch341UsbI2cDevice(int address) {
             super(address);
         }
 
@@ -80,13 +80,13 @@ public class UsbI2cCh341Adapter extends UsbI2cBaseAdapter {
     }
 
 
-    public UsbI2cCh341Adapter(UsbI2cManager i2cManager, UsbDevice usbDevice) {
+    public Ch341UsbI2cAdapter(UsbI2cManager i2cManager, UsbDevice usbDevice) {
         super(i2cManager, usbDevice);
     }
 
     @Override
     public UsbI2cDevice getDevice(int address) {
-        return new UsbI2cCh341Device(address);
+        return new Ch341UsbI2cDevice(address);
     }
 
     @Override
@@ -238,7 +238,7 @@ public class UsbI2cCh341Adapter extends UsbI2cBaseAdapter {
      */
     private int readBulkData(byte[] data, int length) throws IOException {
         int res = usbDeviceConnection.bulkTransfer(usbReadEndpoint, data,
-                length, UsbI2cBaseAdapter.USB_TIMEOUT_MILLIS);
+                length, BaseUsbI2cAdapter.USB_TIMEOUT_MILLIS);
         if (res < 0) {
             throw new IOException("Bulk read error, result: " + res);
         }
@@ -254,7 +254,7 @@ public class UsbI2cCh341Adapter extends UsbI2cBaseAdapter {
      */
     private void writeBulkData(byte[] data, int length) throws IOException {
         int res = usbDeviceConnection.bulkTransfer(usbWriteEndpoint, data, length,
-                UsbI2cBaseAdapter.USB_TIMEOUT_MILLIS);
+                BaseUsbI2cAdapter.USB_TIMEOUT_MILLIS);
         if (res < 0) {
             throw new IOException("Bulk write error, result: " + res);
         }

@@ -39,7 +39,7 @@ import static com.github.ykc3.android.usbi2c.UsbI2cManager.UsbDeviceIdentifier;
  * Programming Interface Specification:
  * https://www.silabs.com/documents/public/application-notes/an495-cp2112-interface-specification.pdf
  */
-public class UsbI2cCp2112Adapter extends UsbI2cBaseAdapter {
+public class Cp2112UsbI2cAdapter extends BaseUsbI2cAdapter {
     // HID feature request GET_REPORT code
     private static final int HID_FEATURE_REQUEST_REPORT_GET = 0x01;
     // HID feature request SET_REPORT code
@@ -88,8 +88,8 @@ public class UsbI2cCp2112Adapter extends UsbI2cBaseAdapter {
     private UsbEndpoint usbReadEndpoint;
     private UsbEndpoint usbWriteEndpoint;
 
-    class UsbI2cCp2112Device extends UsbI2cBaseDevice {
-        UsbI2cCp2112Device(int address) {
+    class Cp2112UsbI2cDevice extends BaseUsbI2cDevice {
+        Cp2112UsbI2cDevice(int address) {
             super(address);
         }
 
@@ -109,13 +109,13 @@ public class UsbI2cCp2112Adapter extends UsbI2cBaseAdapter {
         }
     }
 
-    public UsbI2cCp2112Adapter(UsbI2cManager manager, UsbDevice usbDevice) {
+    public Cp2112UsbI2cAdapter(UsbI2cManager manager, UsbDevice usbDevice) {
         super(manager, usbDevice);
     }
 
     @Override
     public UsbI2cDevice getDevice(int address) {
-        return new UsbI2cCp2112Device(address);
+        return new Cp2112UsbI2cDevice(address);
     }
 
     @Override

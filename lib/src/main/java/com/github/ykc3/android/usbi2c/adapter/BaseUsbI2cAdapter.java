@@ -29,7 +29,7 @@ import com.github.ykc3.android.usbi2c.UsbI2cManager;
 import java.io.IOException;
 import java.util.concurrent.locks.ReentrantLock;
 
-abstract class UsbI2cBaseAdapter implements UsbI2cAdapter {
+abstract class BaseUsbI2cAdapter implements UsbI2cAdapter {
     // Linux kernel flags
     static final int I2C_M_RD = 0x01; // read data, from slave to master
 
@@ -46,10 +46,10 @@ abstract class UsbI2cBaseAdapter implements UsbI2cAdapter {
 
     protected final ReentrantLock accessLock = new ReentrantLock();
 
-    protected abstract class UsbI2cBaseDevice implements UsbI2cDevice {
+    protected abstract class BaseUsbI2cDevice implements UsbI2cDevice {
         final int address;
 
-        UsbI2cBaseDevice(int address) {
+        BaseUsbI2cDevice(int address) {
             this.address = (address & 0x7f);
         }
 
@@ -110,9 +110,9 @@ abstract class UsbI2cBaseAdapter implements UsbI2cAdapter {
             try {
                 accessLock.lock();
                 int len = Math.min(length, MAX_MESSAGE_SIZE);
-                UsbI2cBaseAdapter.this.buffer[0] = (byte) reg;
-                System.arraycopy(buffer, 0, UsbI2cBaseAdapter.this.buffer, 1, len);
-                write(UsbI2cBaseAdapter.this.buffer, len + 1);
+                BaseUsbI2cAdapter.this.buffer[0] = (byte) reg;
+                System.arraycopy(buffer, 0, BaseUsbI2cAdapter.this.buffer, 1, len);
+                write(BaseUsbI2cAdapter.this.buffer, len + 1);
             } finally {
                 accessLock.unlock();
             }
@@ -155,7 +155,7 @@ abstract class UsbI2cBaseAdapter implements UsbI2cAdapter {
         protected abstract void deviceRead(byte[] buffer, int length) throws IOException;
     }
 
-    UsbI2cBaseAdapter(UsbI2cManager i2cManager, UsbDevice usbDevice) {
+    BaseUsbI2cAdapter(UsbI2cManager i2cManager, UsbDevice usbDevice) {
         this.i2cManager = i2cManager;
         this.usbDevice = usbDevice;
     }

@@ -30,7 +30,7 @@ import java.io.IOException;
 /**
  * Cheap and simple I2C to USB interface (http://www.harbaum.org/till/i2c_tiny_usb).
  */
-public class UsbI2cTinyAdapter extends UsbI2cBaseAdapter {
+public class TinyUsbI2cAdapter extends BaseUsbI2cAdapter {
 
     // Commands via USB, must match command ids in the firmware
     private static final int CMD_ECHO = 0;
@@ -44,10 +44,10 @@ public class UsbI2cTinyAdapter extends UsbI2cBaseAdapter {
 
     private static final int USB_RECIP_INTERFACE = 0x01;
 
-    class UsbI2cTinyDevice extends UsbI2cBaseDevice {
+    class TinyUsbI2cDevice extends BaseUsbI2cDevice {
         private final byte[] regBuffer = new byte[1];
 
-        UsbI2cTinyDevice(int address) {
+        TinyUsbI2cDevice(int address) {
             super(address);
         }
 
@@ -71,13 +71,13 @@ public class UsbI2cTinyAdapter extends UsbI2cBaseAdapter {
         }
     }
 
-    public UsbI2cTinyAdapter(UsbI2cManager manager, UsbDevice usbDevice) {
+    public TinyUsbI2cAdapter(UsbI2cManager manager, UsbDevice usbDevice) {
         super(manager, usbDevice);
     }
 
     @Override
     public UsbI2cDevice getDevice(int address) {
-        return new UsbI2cTinyDevice(address);
+        return new TinyUsbI2cDevice(address);
     }
 
     private void usbRead(int cmd, int value, int index, byte[] data, int len) throws IOException {

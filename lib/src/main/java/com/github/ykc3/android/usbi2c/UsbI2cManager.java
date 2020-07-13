@@ -21,9 +21,9 @@ package com.github.ykc3.android.usbi2c;
 import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbManager;
 
-import com.github.ykc3.android.usbi2c.adapter.UsbI2cCh341Adapter;
-import com.github.ykc3.android.usbi2c.adapter.UsbI2cCp2112Adapter;
-import com.github.ykc3.android.usbi2c.adapter.UsbI2cTinyAdapter;
+import com.github.ykc3.android.usbi2c.adapter.Ch341UsbI2cAdapter;
+import com.github.ykc3.android.usbi2c.adapter.Cp2112UsbI2cAdapter;
+import com.github.ykc3.android.usbi2c.adapter.TinyUsbI2cAdapter;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
@@ -92,9 +92,9 @@ public class UsbI2cManager {
      */
     public static List<Class<? extends UsbI2cAdapter>> getSupportedUsbI2cAdapters() {
         List<Class<? extends UsbI2cAdapter>> usbI2cAdapters = new ArrayList<>();
-        usbI2cAdapters.add(UsbI2cTinyAdapter.class);
-        usbI2cAdapters.add(UsbI2cCp2112Adapter.class);
-        usbI2cAdapters.add(UsbI2cCh341Adapter.class);
+        usbI2cAdapters.add(TinyUsbI2cAdapter.class);
+        usbI2cAdapters.add(Cp2112UsbI2cAdapter.class);
+        usbI2cAdapters.add(Ch341UsbI2cAdapter.class);
         return usbI2cAdapters;
     }
 
