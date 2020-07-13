@@ -21,6 +21,7 @@ package com.github.ykc3.android.usbi2c;
 import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbManager;
 
+import com.github.ykc3.android.usbi2c.adapter.UsbI2cCh341Adapter;
 import com.github.ykc3.android.usbi2c.adapter.UsbI2cCp2112Adapter;
 import com.github.ykc3.android.usbi2c.adapter.UsbI2cTinyAdapter;
 
@@ -93,6 +94,7 @@ public class UsbI2cManager {
         List<Class<? extends UsbI2cAdapter>> usbI2cAdapters = new ArrayList<>();
         usbI2cAdapters.add(UsbI2cTinyAdapter.class);
         usbI2cAdapters.add(UsbI2cCp2112Adapter.class);
+        usbI2cAdapters.add(UsbI2cCh341Adapter.class);
         return usbI2cAdapters;
     }
 
