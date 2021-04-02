@@ -6,11 +6,11 @@ group='com.github.3cky'
 version='1.1.0'
 
 android {
-    compileSdkVersion 29
+    compileSdkVersion 30
 
     defaultConfig {
         minSdkVersion 19
-        targetSdkVersion 29
+        targetSdkVersion 30
     }
 
     buildTypes {
