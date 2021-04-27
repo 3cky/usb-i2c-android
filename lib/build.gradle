@@ -1,9 +1,5 @@
 apply plugin: 'com.android.library'
-apply plugin: 'com.github.dcendents.android-maven'
-
-project.archivesBaseName='usb-i2c-android'
-group='com.github.3cky'
-version='1.1.0'
+apply plugin: 'maven-publish'
 
 android {
     compileSdkVersion 30
@@ -30,6 +26,17 @@ task androidSourcesJar(type: Jar) {
     from android.sourceSets.main.java.srcDirs
 }
 
-artifacts {
-    archives androidSourcesJar
+afterEvaluate {
+    publishing {
+        publications {
+            maven(MavenPublication) {
+                groupId 'com.github.3cky'
+                artifactId 'usb-i2c-android'
+                version rootProject.ext.projectVersion
+
+                artifact(androidSourcesJar)
+                artifact(bundleReleaseAar)
+            }
+        }
+    }
 }
