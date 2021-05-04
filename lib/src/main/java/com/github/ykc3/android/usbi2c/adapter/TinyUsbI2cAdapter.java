@@ -76,7 +76,7 @@ public class TinyUsbI2cAdapter extends BaseUsbI2cAdapter {
     }
 
     @Override
-    public UsbI2cDevice getDevice(int address) {
+    public TinyUsbI2cDevice getDeviceImpl(int address) {
         return new TinyUsbI2cDevice(address);
     }
 

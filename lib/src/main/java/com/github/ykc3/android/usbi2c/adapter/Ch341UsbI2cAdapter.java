@@ -85,12 +85,12 @@ public class Ch341UsbI2cAdapter extends BaseUsbI2cAdapter {
     }
 
     @Override
-    public UsbI2cDevice getDevice(int address) {
+    protected Ch341UsbI2cDevice getDeviceImpl(int address) {
         return new Ch341UsbI2cDevice(address);
     }
 
     @Override
-    protected void openDevice(UsbDevice usbDevice) throws IOException {
+    protected void open(UsbDevice usbDevice) throws IOException {
         if (usbDevice.getInterfaceCount() == 0) {
             throw new IOException("No interfaces found for device: " + usbDevice);
         }

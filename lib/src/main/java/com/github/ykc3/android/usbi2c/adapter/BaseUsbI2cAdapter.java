@@ -168,28 +168,31 @@ abstract class BaseUsbI2cAdapter implements UsbI2cAdapter {
     @Override
     public void open() throws IOException {
         if (usbDeviceConnection != null) {
-            throw new IllegalStateException("Already opened");
+            throw new IllegalStateException("Adapter already opened");
         }
 
         usbDeviceConnection = i2cManager.getUsbManager().openDevice(usbDevice);
+        if (usbDeviceConnection == null) {
+            throw new IOException("Can't open adapter");
+        }
 
         for (int i = 0; i < usbDevice.getInterfaceCount(); i++) {
             UsbInterface usbDeviceInterface = usbDevice.getInterface(i);
             if (!usbDeviceConnection.claimInterface(usbDeviceInterface, true)) {
-                throw new IOException("Can't claim interface");
+                throw new IOException("Can't claim adapter interfaces");
             }
         }
 
-        openDevice(usbDevice);
+        open(usbDevice);
     }
 
-    protected void openDevice(UsbDevice usbDevice) throws IOException {
+    protected void open(UsbDevice usbDevice) throws IOException {
         // Do nothing by default
     }
 
     @Override
     public void close() throws Exception {
-        closeDevice(usbDevice);
+        close(usbDevice);
 
         if (usbDeviceConnection != null) {
             for (int i = 0; i < usbDevice.getInterfaceCount(); i++) {
@@ -197,12 +200,25 @@ abstract class BaseUsbI2cAdapter implements UsbI2cAdapter {
                 usbDeviceConnection.releaseInterface(usbDeviceInterface);
             }
             usbDeviceConnection.close();
+            usbDeviceConnection = null;
         }
     }
 
-    protected void closeDevice(UsbDevice usbDevice) throws IOException {
+    protected void close(UsbDevice usbDevice) throws IOException {
         // Do nothing by default
     }
+
+
+    @Override
+    public UsbI2cDevice getDevice(int address) {
+        if (usbDeviceConnection == null) {
+            throw new IllegalStateException("Adapter closed");
+        }
+
+        return getDeviceImpl(address);
+    }
+
+    protected abstract BaseUsbI2cDevice getDeviceImpl(int address);
 
     @Override
     public UsbDevice getUsbDevice() {

@@ -45,6 +45,7 @@ public interface UsbI2cAdapter extends AutoCloseable {
      *
      * @param address I2C device address
      * @return reference to I2C device connected to this I2C adapter
+     * @throws IllegalStateException if I2C adapter is not opened or closed
      */
     UsbI2cDevice getDevice(int address);
 
@@ -52,6 +53,7 @@ public interface UsbI2cAdapter extends AutoCloseable {
      * Open I2C adapter for communicating to connected I2C devices.
      *
      * @throws IOException in case of I/O error
+     * @throws IllegalStateException if I2C adapter is already opened
      */
     void open() throws IOException;
 }
