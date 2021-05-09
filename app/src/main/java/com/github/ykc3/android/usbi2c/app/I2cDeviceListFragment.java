@@ -210,6 +210,7 @@ public class I2cDeviceListFragment extends Fragment {
         @Override
         protected Integer doInBackground(UsbDevice... usbDevices) {
             try (UsbI2cAdapter usbI2cAdapter = fragment.usbI2cManager.getAdapter(usbDevices[0])) {
+                usbI2cAdapter.setClockSpeed(UsbI2cAdapter.CLOCK_SPEED_STANDARD);
                 usbI2cAdapter.open();
                 byte[] buf = new byte[1];
                 for (int i2cAddress = MIN_I2C_ADDRESS; i2cAddress <= MAX_I2C_ADDRESS; i2cAddress++) {

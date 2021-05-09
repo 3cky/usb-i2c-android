@@ -23,7 +23,6 @@ import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbEndpoint;
 import android.hardware.usb.UsbInterface;
 
-import com.github.ykc3.android.usbi2c.UsbI2cDevice;
 import com.github.ykc3.android.usbi2c.UsbI2cManager;
 
 import static com.github.ykc3.android.usbi2c.UsbI2cManager.UsbDeviceIdentifier;
@@ -90,7 +89,7 @@ public class Ch341UsbI2cAdapter extends BaseUsbI2cAdapter {
     }
 
     @Override
-    protected void open(UsbDevice usbDevice) throws IOException {
+    protected void init(UsbDevice usbDevice) throws IOException {
         if (usbDevice.getInterfaceCount() == 0) {
             throw new IOException("No interfaces found for device: " + usbDevice);
         }
@@ -115,13 +114,32 @@ public class Ch341UsbI2cAdapter extends BaseUsbI2cAdapter {
             throw new IOException("No read or write bulk endpoint found for device: " + usbDevice);
         }
 
-        setupAdapter();
+        configure();
     }
 
-    private void setupAdapter() throws IOException {
-        // Set I2C bus speed
+    protected int getClockSpeedConstant(int speed) {
+        switch (speed) {
+            case 20000:
+                return CH341_I2C_LOW_SPEED;
+            case CLOCK_SPEED_STANDARD:
+                return CH341_I2C_STANDARD_SPEED;
+            case CLOCK_SPEED_FAST:
+                return CH341_I2C_FAST_SPEED;
+            case 750000:
+                return CH341_I2C_HIGH_SPEED;
+        }
+
+        return -1;
+    }
+
+    @Override
+    public boolean isClockSpeedSupported(int speed) {
+        return (getClockSpeedConstant(speed) >= 0);
+    }
+
+    protected void configure() throws IOException {
         writeBuffer[0] = (byte) CH341_CMD_I2C_STREAM;
-        writeBuffer[1] = CH341_CMD_I2C_STM_SET | CH341_I2C_STANDARD_SPEED;
+        writeBuffer[1] = (byte) (CH341_CMD_I2C_STM_SET | getClockSpeedConstant(getClockSpeed()));
         writeBuffer[2] = CH341_CMD_I2C_STM_END;
         writeBulkData(writeBuffer, 3);
     }
@@ -237,6 +255,7 @@ public class Ch341UsbI2cAdapter extends BaseUsbI2cAdapter {
      * @throws IOException in case of data read error or timeout
      */
     private int readBulkData(byte[] data, int length) throws IOException {
+        checkOpened();
         int res = usbDeviceConnection.bulkTransfer(usbReadEndpoint, data,
                 length, BaseUsbI2cAdapter.USB_TIMEOUT_MILLIS);
         if (res < 0) {
@@ -253,6 +272,7 @@ public class Ch341UsbI2cAdapter extends BaseUsbI2cAdapter {
      * @throws IOException in case of data write error
      */
     private void writeBulkData(byte[] data, int length) throws IOException {
+        checkOpened();
         int res = usbDeviceConnection.bulkTransfer(usbWriteEndpoint, data, length,
                 BaseUsbI2cAdapter.USB_TIMEOUT_MILLIS);
         if (res < 0) {

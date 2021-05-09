@@ -46,6 +46,8 @@ abstract class BaseUsbI2cAdapter implements UsbI2cAdapter {
 
     protected final ReentrantLock accessLock = new ReentrantLock();
 
+    protected int clockSpeed = CLOCK_SPEED_STANDARD;
+
     protected abstract class BaseUsbI2cDevice implements UsbI2cDevice {
         final int address;
 
@@ -165,9 +167,19 @@ abstract class BaseUsbI2cAdapter implements UsbI2cAdapter {
         return usbDevice.getDeviceName();
     }
 
+    protected boolean isOpened() {
+        return (usbDeviceConnection != null);
+    }
+
+    protected void checkOpened() throws IllegalStateException {
+        if (!isOpened()) {
+            throw new IllegalStateException("Adapter is not opened or closed");
+        }
+    }
+
     @Override
     public void open() throws IOException {
-        if (usbDeviceConnection != null) {
+        if (isOpened()) {
             throw new IllegalStateException("Adapter already opened");
         }
 
@@ -183,10 +195,10 @@ abstract class BaseUsbI2cAdapter implements UsbI2cAdapter {
             }
         }
 
-        open(usbDevice);
+        init(usbDevice);
     }
 
-    protected void open(UsbDevice usbDevice) throws IOException {
+    protected void init(UsbDevice usbDevice) throws IOException {
         // Do nothing by default
     }
 
@@ -211,14 +223,42 @@ abstract class BaseUsbI2cAdapter implements UsbI2cAdapter {
 
     @Override
     public UsbI2cDevice getDevice(int address) {
-        if (usbDeviceConnection == null) {
-            throw new IllegalStateException("Adapter closed");
-        }
-
+        checkOpened();
         return getDeviceImpl(address);
     }
 
     protected abstract BaseUsbI2cDevice getDeviceImpl(int address);
+
+    @Override
+    public boolean isClockSpeedSupported(int speed) {
+        return (speed == CLOCK_SPEED_STANDARD);
+    }
+
+    protected int getClockSpeed() {
+        return clockSpeed;
+    }
+
+    @Override
+    public void setClockSpeed(int speed) throws IOException {
+        if (!isClockSpeedSupported(speed)) {
+            throw new IllegalArgumentException("Clock speed is not supported: " + speed);
+        }
+
+        this.clockSpeed = speed;
+
+        if (isOpened()) {
+            try {
+                accessLock.lock();
+                configure();
+            } finally {
+                accessLock.unlock();
+            }
+        }
+    }
+
+    protected void configure() throws IOException {
+        // Do nothing by default
+    }
 
     @Override
     public UsbDevice getUsbDevice() {
@@ -227,6 +267,7 @@ abstract class BaseUsbI2cAdapter implements UsbI2cAdapter {
 
     final void controlTransfer(int requestType, int request, int value,
                                int index, byte[] data, int length) throws IOException {
+        checkOpened();
         int result = usbDeviceConnection.controlTransfer(requestType, request, value,
                 index, data, length, USB_TIMEOUT_MILLIS);
         if (result != length) {

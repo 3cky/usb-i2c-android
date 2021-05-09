@@ -23,7 +23,6 @@ import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbEndpoint;
 import android.hardware.usb.UsbInterface;
 
-import com.github.ykc3.android.usbi2c.UsbI2cDevice;
 import com.github.ykc3.android.usbi2c.UsbI2cManager;
 
 import java.io.IOException;
@@ -68,6 +67,11 @@ public class Cp2112UsbI2cAdapter extends BaseUsbI2cAdapter {
     // CP2112 SMBus configuration size
     private static final int SMBUS_CONFIG_SIZE = 13;
 
+    // CP2112 SMBus configuration: Clock Speed
+    private static final int SMBUS_CONFIG_CLOCK_SPEED_OFFSET = 1;
+    // CP2112 SMBus configuration: Retry Time
+    private static final int SMBUS_CONFIG_RETRY_TIME_OFFSET = 12;
+
     // CP2112 max I2C data write length (single write transfer)
     private static final int MAX_DATA_WRITE_LENGTH = 61;
 
@@ -84,6 +88,11 @@ public class Cp2112UsbI2cAdapter extends BaseUsbI2cAdapter {
     private static final int TRANSFER_STATUS_BUSY = 0x01;
     private static final int TRANSFER_STATUS_COMPLETE = 0x02;
     private static final int TRANSFER_STATUS_ERROR = 0x03;
+
+    // CP2112 min clock speed
+    private static final int MIN_CLOCK_SPEED = 10000;
+    // CP2112 max clock speed
+    private static final int MAX_CLOCK_SPEED = CLOCK_SPEED_HIGH;
 
     private UsbEndpoint usbReadEndpoint;
     private UsbEndpoint usbWriteEndpoint;
@@ -119,7 +128,7 @@ public class Cp2112UsbI2cAdapter extends BaseUsbI2cAdapter {
     }
 
     @Override
-    protected void open(UsbDevice usbDevice) throws IOException {
+    protected void init(UsbDevice usbDevice) throws IOException {
         if (usbDevice.getInterfaceCount() == 0) {
             throw new IOException("No interfaces found for device: " + usbDevice);
         }
@@ -144,17 +153,33 @@ public class Cp2112UsbI2cAdapter extends BaseUsbI2cAdapter {
             throw new IOException("No read or write HID endpoint found for device: " + usbDevice);
         }
 
-        setupAdapter();
-    }
+        configure();
 
-    private void setupAdapter() throws IOException {
-        getHidFeatureReport(REPORT_ID_SMBUS_CONFIG, buffer, SMBUS_CONFIG_SIZE + 1); // reserve one byte for Report ID
-        // Strip first byte (Report ID)
-        System.arraycopy(buffer, 1, buffer, 0, SMBUS_CONFIG_SIZE);
-        buffer[SMBUS_CONFIG_SIZE - 1] = 0x01; // Retry Time (number of retries, default 0 - no limit)
-        sendHidFeatureReport(REPORT_ID_SMBUS_CONFIG, buffer, SMBUS_CONFIG_SIZE);
         // Drain all stale data reports
         drainPendingDataReports();
+    }
+
+    protected void configure() throws IOException {
+        // Get current config
+        getHidFeatureReport(REPORT_ID_SMBUS_CONFIG, buffer, SMBUS_CONFIG_SIZE + 1); // reserve one byte for Report ID
+
+        // Clock Speed (in Hertz, default 0x000186A0 - 100 kHz)
+        int clockSpeed = getClockSpeed();
+        buffer[SMBUS_CONFIG_CLOCK_SPEED_OFFSET]     = (byte) (clockSpeed >> 24);
+        buffer[SMBUS_CONFIG_CLOCK_SPEED_OFFSET + 1] = (byte) (clockSpeed >> 16);
+        buffer[SMBUS_CONFIG_CLOCK_SPEED_OFFSET + 2] = (byte) (clockSpeed >> 8);
+        buffer[SMBUS_CONFIG_CLOCK_SPEED_OFFSET + 3] = (byte) clockSpeed;
+
+        // Retry Time (number of retries, default 0 - no limit)
+        buffer[SMBUS_CONFIG_RETRY_TIME_OFFSET]     = 0x00;
+        buffer[SMBUS_CONFIG_RETRY_TIME_OFFSET + 1] = 0x01;
+
+        sendHidFeatureReport(REPORT_ID_SMBUS_CONFIG, buffer, SMBUS_CONFIG_SIZE + 1);
+    }
+
+    @Override
+    public boolean isClockSpeedSupported(int speed) {
+        return (speed >= MIN_CLOCK_SPEED && speed <= MAX_CLOCK_SPEED);
     }
 
     private void checkWriteDataLength(int length) {
@@ -343,6 +368,7 @@ public class Cp2112UsbI2cAdapter extends BaseUsbI2cAdapter {
      * @throws IOException in case of data report read error or timeout
      */
     private int getHidDataReport(byte[] data, int timeout) throws IOException {
+        checkOpened();
         int res = usbDeviceConnection.bulkTransfer(usbReadEndpoint, data, data.length, timeout);
         if (res < 0) {
             throw new IOException("Get HID data report error, result: " + res);
@@ -359,6 +385,7 @@ public class Cp2112UsbI2cAdapter extends BaseUsbI2cAdapter {
      * @throws IOException in case of data report send error
      */
     private void sendHidDataReport(byte[] data, int length, int timeout) throws IOException {
+        checkOpened();
         int res = usbDeviceConnection.bulkTransfer(usbWriteEndpoint, data, length, timeout);
         if (res < 0) {
             throw new IOException("Send HID data report error, result: " + res);
