@@ -18,7 +18,7 @@ allprojects {
 }
 
 ext {
-    projectVersion = '1.2.0-dev'
+    projectVersion = '1.2.0'
 }
 
 task clean(type: Delete) {

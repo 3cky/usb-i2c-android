@@ -26,7 +26,7 @@ allprojects {
 Add library to dependencies:
 ```gradle
 dependencies {
-    implementation 'com.github.3cky:usb-i2c-android:1.1.0'
+    implementation 'com.github.3cky:usb-i2c-android:1.2.0'
 }
 ```
 
@@ -65,6 +65,11 @@ UsbI2cAdapter i2cAdapter = i2cAdapters.get(0);
 usbManager.requestPermission(i2cAdapter.getUsbDevice(), usbPermissionIntent);
 ...
 // USB permission intent handler called with success result
+
+// Set bus clock speed to 400 kbit/s, if supported by adapter 
+if (i2cAdapter.isClockSpeedSupported(UsbI2cAdapter.CLOCK_SPEED_FAST)) {
+    i2cAdapter.setClockSpeed(UsbI2cAdapter.CLOCK_SPEED_FAST);
+}
 
 // Open adapter
 i2cAdapter.open();
