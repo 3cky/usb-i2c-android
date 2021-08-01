@@ -21,4 +21,5 @@
     <usb-device vendor-id="1027" product-id="50737" /> <!-- i2c-tiny 0x403/0xC631 -->
     <usb-device vendor-id="4292" product-id="60048" /> <!-- CP2112 0x10C4/0xEA90 -->
     <usb-device vendor-id="6790" product-id="21778" /> <!-- CH341 0x1a86/0x5512 -->
+    <usb-device vendor-id="1027" product-id="24596" /> <!-- FT232H 0x403/0x6014 -->
 </resources>

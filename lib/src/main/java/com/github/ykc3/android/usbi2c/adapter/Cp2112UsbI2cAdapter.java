@@ -94,9 +94,6 @@ public class Cp2112UsbI2cAdapter extends BaseUsbI2cAdapter {
     // CP2112 max clock speed
     private static final int MAX_CLOCK_SPEED = CLOCK_SPEED_HIGH;
 
-    private UsbEndpoint usbReadEndpoint;
-    private UsbEndpoint usbWriteEndpoint;
-
     class Cp2112UsbI2cDevice extends BaseUsbI2cDevice {
         Cp2112UsbI2cDevice(int address) {
             super(address);
@@ -138,6 +135,7 @@ public class Cp2112UsbI2cAdapter extends BaseUsbI2cAdapter {
             throw new IOException("No endpoints found for device: " + usbDevice);
         }
 
+        UsbEndpoint usbReadEndpoint = null, usbWriteEndpoint = null;
         for (int i = 0; i < usbInterface.getEndpointCount(); i++) {
             UsbEndpoint usbEndpoint = usbInterface.getEndpoint(i);
             if (usbEndpoint.getType() == UsbConstants.USB_ENDPOINT_XFER_INT) {
@@ -148,10 +146,10 @@ public class Cp2112UsbI2cAdapter extends BaseUsbI2cAdapter {
                 }
             }
         }
-
         if (usbReadEndpoint == null || usbWriteEndpoint == null) {
             throw new IOException("No read or write HID endpoint found for device: " + usbDevice);
         }
+        setBulkEndpoints(usbReadEndpoint, usbWriteEndpoint);
 
         configure();
 
@@ -200,7 +198,7 @@ public class Cp2112UsbI2cAdapter extends BaseUsbI2cAdapter {
     private void writeData(int address, byte[] data, int length) throws IOException {
         checkWriteDataLength(length);
         buffer[0] = REPORT_ID_DATA_WRITE_REQUEST;
-        buffer[1] = (byte) (address << 1);
+        buffer[1] = getAddressByte(address, false);
         buffer[2] = (byte) length;
         System.arraycopy(data, 0, buffer, 3, length);
         sendHidDataReport(buffer, length + 3, USB_TIMEOUT_MILLIS);
@@ -210,7 +208,7 @@ public class Cp2112UsbI2cAdapter extends BaseUsbI2cAdapter {
     private void readData(int address, byte[] data, int length) throws IOException {
         checkReadDataLength(length);
         buffer[0] = REPORT_ID_DATA_READ_REQUEST;
-        buffer[1] = (byte) (address << 1);
+        buffer[1] = getAddressByte(address, false); // read bit is not required
         buffer[2] = (byte) ((length >> 8) & 0xff);
         buffer[3] = (byte) length;
         sendHidDataReport(buffer, 4, USB_TIMEOUT_MILLIS);
@@ -221,7 +219,7 @@ public class Cp2112UsbI2cAdapter extends BaseUsbI2cAdapter {
     private void readRegData(int address, int reg, byte[] data, int length) throws IOException {
         checkReadDataLength(length);
         buffer[0] = REPORT_ID_DATA_WRITE_READ_REQUEST;
-        buffer[1] = (byte) (address << 1);
+        buffer[1] = getAddressByte(address, false); // read bit is not required
         buffer[2] = (byte) ((length >> 8) & 0xff);
         buffer[3] = (byte) length;
         buffer[4] = 0x01; // number of bytes in target address (register ID)
@@ -363,17 +361,11 @@ public class Cp2112UsbI2cAdapter extends BaseUsbI2cAdapter {
      * Read HID data report from USB device to data buffer.
      *
      * @param data data buffer to read report into
-     * @param timeout read timeout in msecs
-     * @return length of read data report
+     * @param timeout read timeout in milliseconds
      * @throws IOException in case of data report read error or timeout
      */
-    private int getHidDataReport(byte[] data, int timeout) throws IOException {
-        checkOpened();
-        int res = usbDeviceConnection.bulkTransfer(usbReadEndpoint, data, data.length, timeout);
-        if (res < 0) {
-            throw new IOException("Get HID data report error, result: " + res);
-        }
-        return res;
+    private void getHidDataReport(byte[] data, int timeout) throws IOException {
+        bulkRead(data, 0, data.length, timeout);
     }
 
     /**
@@ -381,15 +373,11 @@ public class Cp2112UsbI2cAdapter extends BaseUsbI2cAdapter {
      *
      * @param data data buffer to send report from
      * @param length data report length
-     * @param timeout send timeout in msecs
+     * @param timeout send timeout in milliseconds
      * @throws IOException in case of data report send error
      */
     private void sendHidDataReport(byte[] data, int length, int timeout) throws IOException {
-        checkOpened();
-        int res = usbDeviceConnection.bulkTransfer(usbWriteEndpoint, data, length, timeout);
-        if (res < 0) {
-            throw new IOException("Send HID data report error, result: " + res);
-        }
+        bulkWrite(data, length, USB_TIMEOUT_MILLIS);
     }
 
     public static UsbDeviceIdentifier[] getSupportedUsbDeviceIdentifiers() {

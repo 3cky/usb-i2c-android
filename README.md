@@ -11,6 +11,7 @@ No root access or special kernel drivers are required.
 * [I2C-Tiny-USB](https://github.com/harbaum/I2C-Tiny-USB)
 * [Silicon Labs CP2112](http://www.silabs.com/Support%20Documents/TechnicalDocs/CP2112.pdf)
 * [Qinheng Microelectronics CH341](http://www.wch-ic.com/products/CH341.html)
+* [Future Technology Devices International FT232H](http://www.ftdichip.com/Support/Documents/DataSheets/ICs/DS_FT232H.pdf)
 
 ## Usage
 

@@ -23,6 +23,7 @@ import android.hardware.usb.UsbManager;
 
 import com.github.ykc3.android.usbi2c.adapter.Ch341UsbI2cAdapter;
 import com.github.ykc3.android.usbi2c.adapter.Cp2112UsbI2cAdapter;
+import com.github.ykc3.android.usbi2c.adapter.Ft232hUsbI2cAdapter;
 import com.github.ykc3.android.usbi2c.adapter.TinyUsbI2cAdapter;
 
 import java.lang.reflect.Constructor;
@@ -95,6 +96,7 @@ public class UsbI2cManager {
         usbI2cAdapters.add(TinyUsbI2cAdapter.class);
         usbI2cAdapters.add(Cp2112UsbI2cAdapter.class);
         usbI2cAdapters.add(Ch341UsbI2cAdapter.class);
+        usbI2cAdapters.add(Ft232hUsbI2cAdapter.class);
         return usbI2cAdapters;
     }
 

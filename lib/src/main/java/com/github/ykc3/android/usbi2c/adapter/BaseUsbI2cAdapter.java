@@ -20,6 +20,7 @@ package com.github.ykc3.android.usbi2c.adapter;
 
 import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbDeviceConnection;
+import android.hardware.usb.UsbEndpoint;
 import android.hardware.usb.UsbInterface;
 
 import com.github.ykc3.android.usbi2c.UsbI2cAdapter;
@@ -38,7 +39,10 @@ abstract class BaseUsbI2cAdapter implements UsbI2cAdapter {
     protected final UsbI2cManager i2cManager;
     protected final UsbDevice usbDevice;
 
-    protected UsbDeviceConnection usbDeviceConnection;
+    private UsbDeviceConnection usbDeviceConnection;
+
+    private UsbEndpoint usbReadEndpoint;
+    private UsbEndpoint usbWriteEndpoint;
 
     protected static final int MAX_MESSAGE_SIZE = 8192;
 
@@ -111,10 +115,12 @@ abstract class BaseUsbI2cAdapter implements UsbI2cAdapter {
         public void writeRegBuffer(int reg, byte[] buffer, int length) throws IOException {
             try {
                 accessLock.lock();
-                int len = Math.min(length, MAX_MESSAGE_SIZE);
+                if (length > MAX_MESSAGE_SIZE) {
+                    throw new IllegalArgumentException("Message is too long: " + length + " byte(s)");
+                }
                 BaseUsbI2cAdapter.this.buffer[0] = (byte) reg;
-                System.arraycopy(buffer, 0, BaseUsbI2cAdapter.this.buffer, 1, len);
-                write(BaseUsbI2cAdapter.this.buffer, len + 1);
+                System.arraycopy(buffer, 0, BaseUsbI2cAdapter.this.buffer, 1, length);
+                write(BaseUsbI2cAdapter.this.buffer, length + 1);
             } finally {
                 accessLock.unlock();
             }
@@ -275,5 +281,66 @@ abstract class BaseUsbI2cAdapter implements UsbI2cAdapter {
                             "request: 0x%x, value: 0x%x, index: 0x%x, length: %d) failed: %d",
                     requestType, request, value, index, length, result));
         }
+    }
+
+    protected void setBulkEndpoints(UsbEndpoint readEndpoint, UsbEndpoint writeEndpoint) {
+        this.usbReadEndpoint = readEndpoint;
+        this.usbWriteEndpoint = writeEndpoint;
+    }
+
+    /**
+     * Read bulk data from USB device to data buffer.
+     *
+     * @param data data buffer to read data
+     * @param offset data buffer offset to read data
+     * @param length data length to read
+     * @param timeout data read timeout (in milliseconds)
+     * @return actual length of read data
+     * @throws IOException in case of data read error or timeout
+     */
+    final int bulkRead(byte[] data, int offset, int length, int timeout) throws IOException {
+        checkOpened();
+        if (usbReadEndpoint == null) {
+            throw new IllegalStateException("Bulk read endpoint is not set");
+        }
+        int res = usbDeviceConnection.bulkTransfer(usbReadEndpoint, data, offset, length, timeout);
+        if (res < 0) {
+            throw new IOException("Bulk read error: " + res);
+        }
+        return res;
+    }
+
+    /**
+     * Write bulk data from data buffer to USB device.
+     *
+     * @param data data buffer to write data
+     * @param length data length to write
+     * @param timeout data read timeout (in milliseconds)
+     * @throws IOException in case of data write error or timeout
+     */
+    final void bulkWrite(byte[] data, int length, int timeout) throws IOException {
+        checkOpened();
+        if (usbWriteEndpoint == null) {
+            throw new IllegalStateException("Bulk write endpoint is not set");
+        }
+        int res = usbDeviceConnection.bulkTransfer(usbWriteEndpoint, data, length, timeout);
+        if (res < 0) {
+            throw new IOException("Bulk write error: " + res);
+        }
+        if (res < length) {
+            throw new IOException("Bulk write length error, expected: " + length
+                    + " byte(s), written: " + res + " byte(s)");
+        }
+    }
+
+    /**
+     * Get I2C operation address byte value.
+     *
+     * @param address I2C address
+     * @param isRead true for read I2C operation, false for write I2C operation
+     * @return I2C operation address byte value
+     */
+    static byte getAddressByte(int address, boolean isRead) {
+        return (byte) ((address << 1) | (isRead ? 0x01 : 0x00));
     }
 }

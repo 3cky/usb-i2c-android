@@ -54,9 +54,6 @@ public class Ch341UsbI2cAdapter extends BaseUsbI2cAdapter {
     private final byte[] writeBuffer = new byte[MAX_TRANSFER_SIZE];
     private final byte[] readBuffer = new byte[MAX_TRANSFER_SIZE];
 
-    private UsbEndpoint usbReadEndpoint;
-    private UsbEndpoint usbWriteEndpoint;
-
     class Ch341UsbI2cDevice extends BaseUsbI2cDevice {
         Ch341UsbI2cDevice(int address) {
             super(address);
@@ -99,6 +96,7 @@ public class Ch341UsbI2cAdapter extends BaseUsbI2cAdapter {
             throw new IOException("No endpoints found for device: " + usbDevice);
         }
 
+        UsbEndpoint usbReadEndpoint = null, usbWriteEndpoint = null;
         for (int i = 0; i < usbInterface.getEndpointCount(); i++) {
             UsbEndpoint usbEndpoint = usbInterface.getEndpoint(i);
             if (usbEndpoint.getType() == UsbConstants.USB_ENDPOINT_XFER_BULK) {
@@ -109,10 +107,10 @@ public class Ch341UsbI2cAdapter extends BaseUsbI2cAdapter {
                 }
             }
         }
-
         if (usbReadEndpoint == null || usbWriteEndpoint == null) {
             throw new IOException("No read or write bulk endpoint found for device: " + usbDevice);
         }
+        setBulkEndpoints(usbReadEndpoint, usbWriteEndpoint);
 
         configure();
     }
@@ -158,7 +156,7 @@ public class Ch341UsbI2cAdapter extends BaseUsbI2cAdapter {
         writeBuffer[i++] = (byte) CH341_CMD_I2C_STREAM;
         writeBuffer[i++] = CH341_CMD_I2C_STM_STA; // START condition
         writeBuffer[i++] = (byte) (CH341_CMD_I2C_STM_OUT | (length + 1)); // data length + 1
-        writeBuffer[i++] = (byte) (address << 1); // address with read flag not set (write mode)
+        writeBuffer[i++] = getAddressByte(address, false);
         System.arraycopy(data, 0, writeBuffer, i, length);
         i += length;
         writeBuffer[i++] = CH341_CMD_I2C_STM_STO; // STOP condition
@@ -173,7 +171,7 @@ public class Ch341UsbI2cAdapter extends BaseUsbI2cAdapter {
         writeBuffer[i++] = (byte) CH341_CMD_I2C_STREAM;
         writeBuffer[i++] = CH341_CMD_I2C_STM_STA; // START condition
         writeBuffer[i++] = (byte) (CH341_CMD_I2C_STM_OUT | 1); // zero data length + 1
-        writeBuffer[i++] = (byte) ((address << 1) | 0x01); // address with read flag set
+        writeBuffer[i++] = getAddressByte(address, true);
         if (length > 0) {
             for (int j = 0; j < length - 1; j++) {
                 writeBuffer[i++] = (byte) (CH341_CMD_I2C_STM_IN | 1);
@@ -192,7 +190,7 @@ public class Ch341UsbI2cAdapter extends BaseUsbI2cAdapter {
         writeBuffer[i++] = (byte) CH341_CMD_I2C_STREAM;
         writeBuffer[i++] = CH341_CMD_I2C_STM_STA; // START condition
         writeBuffer[i++] = (byte) (CH341_CMD_I2C_STM_OUT | 2); // reg data length + 1
-        writeBuffer[i++] = (byte) (address << 1); // address with read flag not set (write mode)
+        writeBuffer[i++] = getAddressByte(address, false);
         writeBuffer[i++] = (byte) reg;
         writeBulkData(writeBuffer, i);
         // Read register data
@@ -200,7 +198,7 @@ public class Ch341UsbI2cAdapter extends BaseUsbI2cAdapter {
         writeBuffer[i++]= (byte) CH341_CMD_I2C_STREAM;
         writeBuffer[i++] = CH341_CMD_I2C_STM_STA; // START condition
         writeBuffer[i++] = (byte) (CH341_CMD_I2C_STM_OUT | 1); // zero data length + 1
-        writeBuffer[i++] = (byte) ((address << 1) | 0x01); // address with read flag set
+        writeBuffer[i++] = getAddressByte(address, true);
         if (length > 0) {
             for (int j = 0; j < length - 1; j++) {
                 writeBuffer[i++] = (byte) (CH341_CMD_I2C_STM_IN | 1);
@@ -217,7 +215,7 @@ public class Ch341UsbI2cAdapter extends BaseUsbI2cAdapter {
         writeBuffer[i++] = (byte) CH341_CMD_I2C_STREAM;
         writeBuffer[i++] = CH341_CMD_I2C_STM_STA; // START condition
         writeBuffer[i++] = (byte) CH341_CMD_I2C_STM_OUT;
-        writeBuffer[i++] = (byte) ((address << 1) | 0x01); // address with read flag set
+        writeBuffer[i++] = getAddressByte(address, true);
         writeBuffer[i++] = CH341_CMD_I2C_STM_STO; // STOP condition
         writeBuffer[i++] = CH341_CMD_I2C_STM_END; // end of transaction
         int res = transferBulkData(writeBuffer, i, writeBuffer, 1);
@@ -246,38 +244,12 @@ public class Ch341UsbI2cAdapter extends BaseUsbI2cAdapter {
         return readLength;
     }
 
-    /**
-     * Read bulk data from USB device to data buffer.
-     *
-     * @param data data buffer to read data
-     * @param length data length to read
-     * @return actual length of read data
-     * @throws IOException in case of data read error or timeout
-     */
     private int readBulkData(byte[] data, int length) throws IOException {
-        checkOpened();
-        int res = usbDeviceConnection.bulkTransfer(usbReadEndpoint, data,
-                length, BaseUsbI2cAdapter.USB_TIMEOUT_MILLIS);
-        if (res < 0) {
-            throw new IOException("Bulk read error, result: " + res);
-        }
-        return res;
+        return bulkRead(data, 0, length, USB_TIMEOUT_MILLIS);
     }
 
-    /**
-     * Write bulk data from data buffer to USB device.
-     *
-     * @param data data buffer to write data
-     * @param length data length to write
-     * @throws IOException in case of data write error
-     */
     private void writeBulkData(byte[] data, int length) throws IOException {
-        checkOpened();
-        int res = usbDeviceConnection.bulkTransfer(usbWriteEndpoint, data, length,
-                BaseUsbI2cAdapter.USB_TIMEOUT_MILLIS);
-        if (res < 0) {
-            throw new IOException("Bulk write error, result: " + res);
-        }
+        bulkWrite(data, length, USB_TIMEOUT_MILLIS);
     }
 
     public static UsbDeviceIdentifier[] getSupportedUsbDeviceIdentifiers() {
