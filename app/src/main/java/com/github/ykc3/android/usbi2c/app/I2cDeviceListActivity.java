@@ -18,7 +18,11 @@
 
 package com.github.ykc3.android.usbi2c.app;
 
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
+import android.hardware.usb.UsbManager;
 import android.os.Bundle;
 import androidx.appcompat.widget.Toolbar;
 import androidx.appcompat.app.AppCompatActivity;
@@ -33,12 +37,21 @@ import android.view.MenuItem;
  * in a {@link I2cAdapterListActivity}.
  */
 public class I2cDeviceListActivity extends AppCompatActivity {
+    private final BroadcastReceiver usbReceiver = new BroadcastReceiver() {
+        public void onReceive(Context context, Intent intent) {
+            String action = intent.getAction();
+            if (UsbManager.ACTION_USB_DEVICE_ATTACHED.equals(action) ||
+                    UsbManager.ACTION_USB_DEVICE_DETACHED.equals(action)) {
+                onUsbDeviceChanged();
+            }
+        }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_device_list);
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
         // Show the Up button in the action bar.
@@ -68,6 +81,16 @@ public class I2cDeviceListActivity extends AppCompatActivity {
                     .add(R.id.device_list_container, fragment)
                     .commit();
         }
+
+        IntentFilter usbReceiverFilter = new IntentFilter(I2cAdapterListActivity.ACTION_USB_PERMISSION);
+        usbReceiverFilter.addAction(UsbManager.ACTION_USB_DEVICE_DETACHED);
+        registerReceiver(usbReceiver, usbReceiverFilter);
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        unregisterReceiver(usbReceiver);
     }
 
     @Override
@@ -85,5 +108,9 @@ public class I2cDeviceListActivity extends AppCompatActivity {
             return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    private void onUsbDeviceChanged() {
+        finish();
     }
 }

@@ -223,12 +223,7 @@ public class I2cDeviceListFragment extends Fragment {
                             break;
                         }
                         final DeviceItem deviceItem = getDeviceItem(i2cDevice);
-                        activity.runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                fragment.recyclerViewAdapter.addItem(deviceItem);
-                            }
-                        });
+                        activity.runOnUiThread(() -> fragment.recyclerViewAdapter.addItem(deviceItem));
                     } catch (IOException e) {
                         Log.d(TAG, String.format("no I2C device found at 0x%02x (%s)",
                                 i2cAddress, e.getMessage()));
@@ -283,22 +278,15 @@ public class I2cDeviceListFragment extends Fragment {
             snackbar = Snackbar.make(fragment.deviceListRefreshLayout,
                     fragment.getResources().getString(R.string.device_scan_info, MIN_I2C_ADDRESS),
                     Snackbar.LENGTH_INDEFINITE)
-                    .setAction(android.R.string.cancel, new View.OnClickListener() {
-                        @Override
-                        public void onClick(View v) {
-                            fragment.cancelScanI2cDevices();
-                        }
-                    });
+                    .setAction(android.R.string.cancel, v -> fragment.cancelScanI2cDevices());
             snackbar.show();
         }
 
         private void dismissUiProgressItems() {
-            new Handler().postDelayed(new Runnable() {
-                @Override public void run() {
-                    fragment.recyclerView.showEmptyView(fragment.recyclerView.isEmpty());
-                    fragment.deviceListRefreshLayout.setRefreshing(false);
-                    snackbar.dismiss();
-                }
+            new Handler().postDelayed(() -> {
+                fragment.recyclerView.showEmptyView(fragment.recyclerView.isEmpty());
+                fragment.deviceListRefreshLayout.setRefreshing(false);
+                snackbar.dismiss();
             }, isCancelled() ? 0 : 1000);
         }
 
@@ -376,19 +364,12 @@ public class I2cDeviceListFragment extends Fragment {
         recyclerView.showEmptyView(false);
 
         deviceListRefreshLayout = rootView.findViewById(R.id.device_list_refresh);
-        final SwipeRefreshLayout.OnRefreshListener onRefreshListener = new SwipeRefreshLayout.OnRefreshListener() {
-            @Override
-            public void onRefresh() {
-                scanI2cDevices();
-            }
-        };
+        final SwipeRefreshLayout.OnRefreshListener onRefreshListener = this::scanI2cDevices;
         deviceListRefreshLayout.setOnRefreshListener(onRefreshListener);
 
-        deviceListRefreshLayout.post(new Runnable() {
-            @Override public void run() {
-                deviceListRefreshLayout.setRefreshing(true);
-                onRefreshListener.onRefresh();
-            }
+        deviceListRefreshLayout.post(() -> {
+            deviceListRefreshLayout.setRefreshing(true);
+            onRefreshListener.onRefresh();
         });
 
         return rootView;

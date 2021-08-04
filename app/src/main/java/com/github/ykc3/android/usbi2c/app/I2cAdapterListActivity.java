@@ -32,6 +32,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -70,36 +71,31 @@ public class I2cAdapterListActivity extends AppCompatActivity {
     private CustomRecyclerView recyclerView;
     private RecyclerViewAdapter recyclerViewAdapter;
 
-    SwipeRefreshLayout adapterListRefreshLayout;
+    private SwipeRefreshLayout adapterListRefreshLayout;
 
     private PendingIntent usbPermissionIntent;
 
-    private static final String ACTION_USB_PERMISSION =
+    public static final String ACTION_USB_PERMISSION =
             "com.github.ykc3.android.usbi2c.app.USB_PERMISSION";
+
+    private I2cDeviceListFragment i2cDeviceListFragment;
 
     private final BroadcastReceiver usbReceiver = new BroadcastReceiver() {
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
             if (ACTION_USB_PERMISSION.equals(action)) {
-                synchronized (this) {
-                    UsbDevice usbDevice = intent.getParcelableExtra(UsbManager.EXTRA_DEVICE);
-                    if (intent.getBooleanExtra(UsbManager.EXTRA_PERMISSION_GRANTED, false)) {
-                        showI2cDeviceListPane(context, usbDevice);
-                    }
-                    else {
-                        // TODO handle this
-                        Log.d(TAG, "permission denied for device " + usbDevice);
-                    }
-                }
-            } else if (UsbManager.ACTION_USB_DEVICE_ATTACHED.equals(action)
-                    || UsbManager.ACTION_USB_DEVICE_DETACHED.equals(action)) {
-                refreshAdapterList();
+                UsbDevice usbDevice = intent.getParcelableExtra(UsbManager.EXTRA_DEVICE);
+                boolean isGranted = intent.getBooleanExtra(UsbManager.EXTRA_PERMISSION_GRANTED, false);
+                onUsbDevicePermission(usbDevice, isGranted);
+            } else if (UsbManager.ACTION_USB_DEVICE_ATTACHED.equals(action) ||
+                    UsbManager.ACTION_USB_DEVICE_DETACHED.equals(action)) {
+                onUsbDeviceChanged();
             }
         }
     };
 
     public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapter.ViewHolder> {
-        private List<UsbI2cAdapter> items = new ArrayList<>();;
+        private final List<UsbI2cAdapter> items = new ArrayList<>();
 
         private final View.OnClickListener onClickListener = new View.OnClickListener() {
             @Override
@@ -163,36 +159,47 @@ public class I2cAdapterListActivity extends AppCompatActivity {
     SwipeRefreshLayout.OnRefreshListener onRefreshListener = new SwipeRefreshLayout.OnRefreshListener() {
         @Override
         public void onRefresh() {
+            hideI2cDeviceListPane();
             recyclerViewAdapter.clearItems();
             recyclerView.showEmptyView(false);
             final Snackbar snackbar = Snackbar.make(adapterListRefreshLayout,
                     R.string.adapter_scan_info, Snackbar.LENGTH_INDEFINITE);
             snackbar.show();
-            new Handler().postDelayed(new Runnable() {
-                @Override public void run() {
-                    scanI2cAdapters();
-                    recyclerView.showEmptyView(recyclerView.isEmpty());
-                    adapterListRefreshLayout.setRefreshing(false);
-                    snackbar.dismiss();
-                }
+            new Handler().postDelayed(() -> {
+                scanI2cAdapters();
+                recyclerView.showEmptyView(recyclerView.isEmpty());
+                adapterListRefreshLayout.setRefreshing(false);
+                snackbar.dismiss();
             }, 1000);
         }
     };
 
-    protected void showI2cDeviceListPane(Context context, UsbDevice usbDevice) {
+    private void showI2cDeviceListPane(UsbDevice usbDevice) {
         if (isTwoPane) {
+            hideI2cDeviceListPane();
             Bundle arguments = new Bundle();
             arguments.putParcelable(I2cDeviceListFragment.KEY_USB_DEVICE, usbDevice);
-            I2cDeviceListFragment fragment = new I2cDeviceListFragment();
-            fragment.setArguments(arguments);
+            i2cDeviceListFragment = new I2cDeviceListFragment();
+            i2cDeviceListFragment.setArguments(arguments);
             this.getSupportFragmentManager().beginTransaction()
-                    .replace(R.id.adapter_device_list_container, fragment)
+                    .replace(R.id.adapter_device_list_container, i2cDeviceListFragment)
                     .commit();
         } else {
-            Intent intent = new Intent(context, I2cDeviceListActivity.class);
+            Intent intent = new Intent(this, I2cDeviceListActivity.class);
             intent.putExtra(I2cDeviceListFragment.KEY_USB_DEVICE, usbDevice);
-            context.startActivity(intent);
+            this.startActivity(intent);
         }
+    }
+
+    private void hideI2cDeviceListPane() {
+        if (!isTwoPane || i2cDeviceListFragment == null) {
+            return;
+        }
+        this.getSupportFragmentManager().beginTransaction()
+                .remove(i2cDeviceListFragment)
+                .commit();
+        i2cDeviceListFragment = null;
+        this.getSupportFragmentManager().popBackStack();
     }
 
     @Override
@@ -204,7 +211,7 @@ public class I2cAdapterListActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
         toolbar.setTitle(getTitle());
 
-        if (findViewById(R.id.device_list_container) != null) {
+        if (findViewById(R.id.adapter_device_list_container) != null) {
             // The detail container view will be present only in the
             // large-screen layouts (res/values-w900dp).
             // If this view is present, then the
@@ -236,13 +243,27 @@ public class I2cAdapterListActivity extends AppCompatActivity {
         refreshAdapterList();
     }
 
+    private void onUsbDeviceChanged() {
+        refreshAdapterList();
+    }
+
+    private void onUsbDevicePermission(UsbDevice usbDevice, boolean isGranted) {
+        synchronized (this) {
+            if (isGranted) {
+                showI2cDeviceListPane(usbDevice);
+            } else {
+                Log.d(TAG, "permission denied for device " + usbDevice);
+                Toast.makeText(I2cAdapterListActivity.this,
+                        R.string.permission_denied, Toast.LENGTH_SHORT).show();
+            }
+        }
+    }
+
     void refreshAdapterList() {
         if (adapterListRefreshLayout != null) {
-            adapterListRefreshLayout.post(new Runnable() {
-                @Override public void run() {
-                    adapterListRefreshLayout.setRefreshing(true);
-                    onRefreshListener.onRefresh();
-                }
+            adapterListRefreshLayout.post(() -> {
+                adapterListRefreshLayout.setRefreshing(true);
+                onRefreshListener.onRefresh();
             });
         }
     }

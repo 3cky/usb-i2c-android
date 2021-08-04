@@ -38,7 +38,8 @@
 
     <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
         android:id="@+id/adapter_list_refresh"
-        android:layout_width="match_parent"
+        android:layout_width="0dp"
+        android:layout_weight="1"
         android:layout_height="match_parent">
 
         <FrameLayout
@@ -75,6 +76,6 @@
         android:id="@+id/adapter_device_list_container"
         android:layout_width="0dp"
         android:layout_height="match_parent"
-        android:layout_weight="3" />
+        android:layout_weight="2" />
 
 </LinearLayout>
