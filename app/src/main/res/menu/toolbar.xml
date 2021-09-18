@@ -1,6 +1,5 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!--
-  ~ Copyright (c) 2019 Victor Antonovich <v.antonovich@gmail.com>
+<?xml version="1.0" encoding="utf-8"?><!--
+  ~ Copyright (c) 2021 Victor Antonovich <v.antonovich@gmail.com>
   ~
   ~ This work is free software; you can redistribute it and/or
   ~ modify it under the terms of the GNU Lesser General Public License
@@ -17,8 +16,11 @@
   ~ 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA.
   -->
 
-<resources>
-    <dimen name="fab_margin">16dp</dimen>
-    <dimen name="item_width">200dp</dimen>
-    <dimen name="text_margin">16dp</dimen>
-</resources>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <item
+        android:id="@+id/about"
+        android:icon="@drawable/ic_outline_info_24"
+        android:title="@string/about"
+        app:showAsAction="ifRoom" />
+</menu>

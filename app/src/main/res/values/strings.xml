@@ -1,11 +1,15 @@
 <resources>
-    <string name="app_name">USB I2C Scanner</string>
-    <string name="title_adapter_list">USB I2C Adapters</string>
-    <string name="title_device_list">I2C Devices</string>
-    <string name="adapter_scan_info">Scanning for USB I2C adapters…</string>
-    <string name="device_scan_info">Scanning I2C address: 0x%1$02x</string>
+    <string name="app_name">USB I²C Scanner</string>
+    <string name="title_adapter_list">USB I²C Adapters</string>
+    <string name="title_device_list">I²C Devices</string>
+    <string name="adapter_scan_info">Scanning for USB I²C adapters…</string>
+    <string name="device_scan_info">Scanning I²C address: 0x%1$02x</string>
     <string name="unknown_device">Unknown device</string>
-    <string name="empty_adapter_list">No USB I2C adapters found\n(pull to refresh)</string>
-    <string name="empty_device_list">No I2C devices found\n(pull to refresh)</string>
+    <string name="empty_adapter_list">No USB I²C adapters found\n(pull to refresh)</string>
+    <string name="empty_device_list">No I²C devices found\n(pull to refresh)</string>
     <string name="permission_denied">Permission denied</string>
+    <string name="about">About</string>
+    <string name="about_logo">I²C Scanner Logo</string>
+    <string name="about_info">I²C device scanner sample app for library allowing communication with USB I²C adapters connected to the Android USB Host.</string>
+    <string name="about_link">https://github.com/3cky/usb-i2c-android</string>
 </resources>

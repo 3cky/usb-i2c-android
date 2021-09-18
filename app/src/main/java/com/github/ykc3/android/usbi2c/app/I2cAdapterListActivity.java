@@ -18,6 +18,7 @@
 
 package com.github.ykc3.android.usbi2c.app;
 
+import android.app.Dialog;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -31,6 +32,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.Window;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -79,6 +81,8 @@ public class I2cAdapterListActivity extends AppCompatActivity {
             "com.github.ykc3.android.usbi2c.app.USB_PERMISSION";
 
     private I2cDeviceListFragment i2cDeviceListFragment;
+
+    private Dialog aboutDialog;
 
     private final BroadcastReceiver usbReceiver = new BroadcastReceiver() {
         public void onReceive(Context context, Intent intent) {
@@ -208,8 +212,10 @@ public class I2cAdapterListActivity extends AppCompatActivity {
         setContentView(R.layout.activity_adapter_list);
 
         Toolbar toolbar = findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
-        toolbar.setTitle(getTitle());
+        toolbar.setOnMenuItemClickListener(item -> {
+            showAboutDialog();
+            return true;
+        });
 
         if (findViewById(R.id.adapter_device_list_container) != null) {
             // The detail container view will be present only in the
@@ -243,6 +249,17 @@ public class I2cAdapterListActivity extends AppCompatActivity {
         refreshAdapterList();
     }
 
+    private void showAboutDialog() {
+        Log.d(TAG, "showing about dialog");
+        aboutDialog = new Dialog(this);
+        aboutDialog.setTitle(R.string.about);
+        aboutDialog.requestWindowFeature(Window.FEATURE_LEFT_ICON);
+        aboutDialog.setContentView(R.layout.about);
+        aboutDialog.getWindow().setFeatureDrawableResource(Window.FEATURE_LEFT_ICON,
+                android.R.drawable.ic_dialog_info);
+        aboutDialog.show();
+    }
+
     private void onUsbDeviceChanged() {
         refreshAdapterList();
     }
@@ -271,6 +288,15 @@ public class I2cAdapterListActivity extends AppCompatActivity {
     void scanI2cAdapters() {
         List<UsbI2cAdapter> items = usbI2cManager.getAdapters();
         recyclerViewAdapter.updateItems(items);
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        if (aboutDialog != null) {
+            aboutDialog.dismiss();
+            aboutDialog = null;
+        }
     }
 
     @Override
