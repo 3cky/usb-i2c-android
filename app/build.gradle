@@ -1,18 +1,67 @@
 apply plugin: 'com.android.application'
+apply plugin: 'maven-publish'
 
 android {
     compileSdkVersion 30
+
     defaultConfig {
         applicationId "com.github.ykc3.android.usbi2c.app"
+
         minSdkVersion 21
         targetSdkVersion 30
-        versionCode 1
+
+        versionCode rootProject.ext.projectVersionMajor * 1000000 +
+                rootProject.ext.projectVersionMinor * 1000 +
+                rootProject.ext.projectVersionPatch
         versionName rootProject.ext.projectVersion
     }
-    buildTypes {
+
+    // Release management
+    signingConfigs {
         release {
-            minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            Properties properties = new Properties()
+            properties.load(project.rootProject.file('local.properties').newDataInputStream())
+            keyAlias properties.getProperty('key.alias')
+            keyPassword properties.getProperty('key.password')
+            storeFile file(properties.getProperty('key.store.file'))
+            storePassword properties.getProperty('key.store.password')
+        }
+    }
+    buildTypes {
+        debug {
+            versionNameSuffix "-debug"
+        }
+        release {
+            minifyEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'),
+                    'proguard-rules.pro'
+            signingConfig signingConfigs.release
+        }
+    }
+}
+
+afterEvaluate {
+    publishing {
+        publications {
+            releaseApk(MavenPublication) {
+                from components.release_apk
+
+                groupId 'com.github.3cky'
+                artifactId 'usb-i2c-android-app'
+                version rootProject.ext.projectVersion
+
+                artifact source: file('build/outputs/mapping/release/mapping.txt'),
+                        classifier: 'mapping', extension: 'txt'
+                artifact source: file('build/outputs/apk/release/app-release.apk'),
+                        classifier: 'signed', extension: 'apk'
+            }
+            releaseAab(MavenPublication) {
+                from components.release_aab
+
+                groupId 'com.github.3cky'
+                artifactId 'usb-i2c-android-app'
+                version rootProject.ext.projectVersion
+            }
         }
     }
 }

@@ -18,7 +18,10 @@ allprojects {
 }
 
 ext {
-    projectVersion = '1.2.0'
+    projectVersionMajor = 1
+    projectVersionMinor = 2
+    projectVersionPatch = 0
+    projectVersion = "${projectVersionMajor}.${projectVersionMinor}.${projectVersionPatch}"
 }
 
 task clean(type: Delete) {
