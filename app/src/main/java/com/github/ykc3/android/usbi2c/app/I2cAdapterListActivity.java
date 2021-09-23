@@ -24,6 +24,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.pm.PackageManager.NameNotFoundException;
 import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbManager;
 import android.os.Bundle;
@@ -250,13 +251,21 @@ public class I2cAdapterListActivity extends AppCompatActivity {
     }
 
     private void showAboutDialog() {
-        Log.d(TAG, "showing about dialog");
         aboutDialog = new Dialog(this);
         aboutDialog.setTitle(R.string.about);
         aboutDialog.requestWindowFeature(Window.FEATURE_LEFT_ICON);
         aboutDialog.setContentView(R.layout.about);
         aboutDialog.getWindow().setFeatureDrawableResource(Window.FEATURE_LEFT_ICON,
                 android.R.drawable.ic_dialog_info);
+        String versionString;
+        try {
+            versionString = getResources().getString(R.string.about_version,
+                    getPackageManager().getPackageInfo(getPackageName(), 0).versionName);
+        } catch (NameNotFoundException e) {
+            versionString = getResources().getString(R.string.about_version_unknown);
+        }
+        TextView versionTextView = aboutDialog.findViewById(R.id.about_version);
+        versionTextView.setText(versionString);
         aboutDialog.show();
     }
 

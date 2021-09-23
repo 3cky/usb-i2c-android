@@ -31,6 +31,13 @@
             android:autoLink="web"
             android:text="@string/about_link" />
 
+        <TextView android:id="@+id/about_version"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_horizontal"
+            android:paddingBottom="10dp"
+            android:text="@string/about_version"/>
+
     </LinearLayout>
 
 </ScrollView>

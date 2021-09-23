@@ -10,6 +10,8 @@
     <string name="permission_denied">Permission denied</string>
     <string name="about">About</string>
     <string name="about_logo">I²C Scanner Logo</string>
-    <string name="about_info">I²C device scanner sample app for library allowing communication with USB I²C adapters connected to the Android USB Host.</string>
+    <string name="about_info">I²C device scanner sample app for library allowing communication with USB I²C adapters connected to the Android USB Host:</string>
     <string name="about_link">https://github.com/3cky/usb-i2c-android</string>
+    <string name="about_version">Version: %s</string>
+    <string name="about_version_unknown">Unknown</string>
 </resources>
