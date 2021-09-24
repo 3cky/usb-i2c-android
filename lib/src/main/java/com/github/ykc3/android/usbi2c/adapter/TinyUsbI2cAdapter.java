@@ -31,6 +31,8 @@ import java.io.IOException;
  * Cheap and simple I2C to USB interface (http://www.harbaum.org/till/i2c_tiny_usb).
  */
 public class TinyUsbI2cAdapter extends BaseUsbI2cAdapter {
+    // Adapter name
+    public static final String ADAPTER_NAME = "TinyUSB";
 
     // Commands via USB, must match command ids in the firmware
     private static final int CMD_ECHO = 0;
@@ -73,6 +75,11 @@ public class TinyUsbI2cAdapter extends BaseUsbI2cAdapter {
 
     public TinyUsbI2cAdapter(UsbI2cManager manager, UsbDevice usbDevice) {
         super(manager, usbDevice);
+    }
+
+    @Override
+    public String getName() {
+        return ADAPTER_NAME;
     }
 
     @Override

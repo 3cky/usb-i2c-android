@@ -39,6 +39,9 @@ import static com.github.ykc3.android.usbi2c.UsbI2cManager.UsbDeviceIdentifier;
  * https://www.silabs.com/documents/public/application-notes/an495-cp2112-interface-specification.pdf
  */
 public class Cp2112UsbI2cAdapter extends BaseUsbI2cAdapter {
+    // Adapter name
+    public static final String ADAPTER_NAME = "CP2112";
+
     // HID feature request GET_REPORT code
     private static final int HID_FEATURE_REQUEST_REPORT_GET = 0x01;
     // HID feature request SET_REPORT code
@@ -117,6 +120,11 @@ public class Cp2112UsbI2cAdapter extends BaseUsbI2cAdapter {
 
     public Cp2112UsbI2cAdapter(UsbI2cManager manager, UsbDevice usbDevice) {
         super(manager, usbDevice);
+    }
+
+    @Override
+    public String getName() {
+        return ADAPTER_NAME;
     }
 
     @Override

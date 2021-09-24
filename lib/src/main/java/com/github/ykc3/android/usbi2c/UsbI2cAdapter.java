@@ -36,6 +36,13 @@ public interface UsbI2cAdapter extends AutoCloseable {
     int CLOCK_SPEED_HIGH = 3400000;
 
     /**
+     * Get I2C adapter name.
+     *
+     * @return I2C adapter name
+     */
+    String getName();
+
+    /**
      * Get I2C adapter identifier string.
      *
      * @return I2C adapter identifier string

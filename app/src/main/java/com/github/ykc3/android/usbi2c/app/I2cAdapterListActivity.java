@@ -131,17 +131,19 @@ public class I2cAdapterListActivity extends AppCompatActivity {
 
         @Override
         public void onBindViewHolder(@NonNull final ViewHolder holder, int position) {
-            UsbDevice usbDevice = items.get(position).getUsbDevice();
+            UsbI2cAdapter usbI2cAdapter = items.get(position);
+            UsbDevice usbDevice = usbI2cAdapter.getUsbDevice();
             holder.adapterIdView.setText(String.format("%04x:%04x", usbDevice.getVendorId(),
                     usbDevice.getProductId()));
-            String adapterName = null;
+            String adapterDeviceName = null;
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
-                adapterName = usbDevice.getProductName();
+                adapterDeviceName = usbDevice.getProductName();
             }
-            if (adapterName == null || adapterName.isEmpty()) {
-                adapterName = usbDevice.getDeviceName();
+            if (adapterDeviceName == null || adapterDeviceName.isEmpty()) {
+                adapterDeviceName = usbDevice.getDeviceName();
             }
-            holder.adapterNameView.setText(adapterName);
+            holder.adapterNameView.setText(String.format("%s (%s)", usbI2cAdapter.getName(),
+                    adapterDeviceName));
 
             holder.itemView.setTag(items.get(position));
             holder.itemView.setOnClickListener(onClickListener);

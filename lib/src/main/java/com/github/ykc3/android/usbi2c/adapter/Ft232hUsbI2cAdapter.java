@@ -43,6 +43,9 @@ import static com.github.ykc3.android.usbi2c.UsbI2cManager.UsbDeviceIdentifier;
  * https://ftdichip.com/wp-content/uploads/2020/08/AN_255_USB-to-I2C-Example-using-the-FT232H-and-FT201X-devices-1.pdf
  */
 public class Ft232hUsbI2cAdapter extends BaseUsbI2cAdapter {
+    // Adapter name
+    public static final String ADAPTER_NAME = "FT232H";
+
     // Nanoseconds in one millisecond
     private static final long NANOS_IN_MS = 1000000L;
 
@@ -266,6 +269,11 @@ public class Ft232hUsbI2cAdapter extends BaseUsbI2cAdapter {
 
     public Ft232hUsbI2cAdapter(UsbI2cManager manager, UsbDevice device) {
         super(manager, device);
+    }
+
+    @Override
+    public String getName() {
+        return ADAPTER_NAME;
     }
 
     @Override

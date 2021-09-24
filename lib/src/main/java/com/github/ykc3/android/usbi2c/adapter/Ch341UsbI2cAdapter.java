@@ -34,6 +34,9 @@ import java.io.IOException;
  * 2-wire or 4-wire through USB bus (http://www.anok.ceti.pl/download/ch341ds1.pdf).
  */
 public class Ch341UsbI2cAdapter extends BaseUsbI2cAdapter {
+    // Adapter name
+    public static final String ADAPTER_NAME = "CH341";
+
     private static final int CH341_I2C_LOW_SPEED = 0;      // low speed - 20kHz
     private static final int CH341_I2C_STANDARD_SPEED = 1; // standard speed - 100kHz
     private static final int CH341_I2C_FAST_SPEED = 2;     // fast speed - 400kHz
@@ -78,6 +81,11 @@ public class Ch341UsbI2cAdapter extends BaseUsbI2cAdapter {
 
     public Ch341UsbI2cAdapter(UsbI2cManager i2cManager, UsbDevice usbDevice) {
         super(i2cManager, usbDevice);
+    }
+
+    @Override
+    public String getName() {
+        return ADAPTER_NAME;
     }
 
     @Override
