@@ -30,7 +30,7 @@ android {
             versionNameSuffix "-debug"
         }
         release {
-            minifyEnabled true
+            minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'),
                     'proguard-rules.pro'
             signingConfig signingConfigs.release
@@ -48,8 +48,6 @@ afterEvaluate {
                 artifactId 'usb-i2c-android-app'
                 version versions.project.number
 
-                artifact source: file('build/outputs/mapping/release/mapping.txt'),
-                        classifier: 'mapping', extension: 'txt'
                 artifact source: file('build/outputs/apk/release/app-release.apk'),
                         classifier: 'signed', extension: 'apk'
             }
