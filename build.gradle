@@ -1,5 +1,10 @@
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 
+// Project semantic versioning components (https://semver.org/)
+def projectVersionMajor = 1
+def projectVersionMinor = 2
+def projectVersionPatch = 0
+
 buildscript {
     repositories {
         google()
@@ -18,10 +23,12 @@ allprojects {
 }
 
 ext {
-    projectVersionMajor = 1
-    projectVersionMinor = 2
-    projectVersionPatch = 0
-    projectVersion = "${projectVersionMajor}.${projectVersionMinor}.${projectVersionPatch}"
+    versions = [
+            sdk: [compile: 30, min: 19, target: 30],
+            project: [major: projectVersionMajor,
+                      minor: projectVersionMinor,
+                      patch: projectVersionPatch,
+                      number: "${projectVersionMajor}.${projectVersionMinor}.${projectVersionPatch}"]]
 }
 
 task clean(type: Delete) {

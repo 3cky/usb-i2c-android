@@ -2,18 +2,16 @@ apply plugin: 'com.android.application'
 apply plugin: 'maven-publish'
 
 android {
-    compileSdkVersion 30
+    compileSdkVersion versions.sdk.compile
 
     defaultConfig {
         applicationId "com.github.ykc3.android.usbi2c.app"
 
-        minSdkVersion 21
-        targetSdkVersion 30
+        minSdkVersion versions.sdk.min
+        targetSdkVersion versions.sdk.targets
 
-        versionCode rootProject.ext.projectVersionMajor * 1000000 +
-                rootProject.ext.projectVersionMinor * 1000 +
-                rootProject.ext.projectVersionPatch
-        versionName rootProject.ext.projectVersion
+        versionCode versions.project.major * 1000000 + versions.project.minor * 1000 + versions.project.patch
+        versionName versions.project.number
     }
 
     // Release management
@@ -48,7 +46,7 @@ afterEvaluate {
 
                 groupId 'com.github.3cky'
                 artifactId 'usb-i2c-android-app'
-                version rootProject.ext.projectVersion
+                version versions.project.number
 
                 artifact source: file('build/outputs/mapping/release/mapping.txt'),
                         classifier: 'mapping', extension: 'txt'
@@ -60,7 +58,7 @@ afterEvaluate {
 
                 groupId 'com.github.3cky'
                 artifactId 'usb-i2c-android-app'
-                version rootProject.ext.projectVersion
+                version versions.project.number
             }
         }
     }
