@@ -134,7 +134,10 @@ public class I2cAdapterListActivity extends AppCompatActivity {
             UsbDevice usbDevice = items.get(position).getUsbDevice();
             holder.adapterIdView.setText(String.format("%04x:%04x", usbDevice.getVendorId(),
                     usbDevice.getProductId()));
-            String adapterName = usbDevice.getProductName();
+            String adapterName = null;
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
+                adapterName = usbDevice.getProductName();
+            }
             if (adapterName == null || adapterName.isEmpty()) {
                 adapterName = usbDevice.getDeviceName();
             }
