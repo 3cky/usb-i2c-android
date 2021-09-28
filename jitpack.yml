@@ -1,2 +1,6 @@
 jdk:
   - openjdk11
+
+install:
+  - echo "Publishing library"
+  - ./gradlew clean lib:publishToMavenLocal
