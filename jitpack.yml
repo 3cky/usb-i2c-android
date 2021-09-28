@@ -3,4 +3,4 @@ jdk:
 
 install:
   - echo "Publishing library"
-  - ./gradlew clean install -x app:publishToMavenLocal
+  - ./gradlew clean -xtest -xlint lib:build lib:publishToMavenLocal
