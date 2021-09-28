@@ -17,12 +17,15 @@ android {
     // Release management
     signingConfigs {
         release {
-            Properties properties = new Properties()
-            properties.load(project.rootProject.file('local.properties').newDataInputStream())
-            keyAlias properties.getProperty('key.alias')
-            keyPassword properties.getProperty('key.password')
-            storeFile file(properties.getOrDefault('key.store.file', 'release.keystore'))
-            storePassword properties.getProperty('key.store.password')
+            File propsFile = project.rootProject.file('local.properties')
+            if (propsFile.exists()) {
+                Properties properties = new Properties()
+                properties.load(propsFile.newDataInputStream())
+                keyAlias properties.getProperty('key.alias')
+                keyPassword properties.getProperty('key.password')
+                storeFile file(properties.getOrDefault('key.store.file', 'release.keystore'))
+                storePassword properties.getProperty('key.store.password')
+            }
         }
     }
     buildTypes {
