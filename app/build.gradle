@@ -8,7 +8,7 @@ android {
         applicationId "com.github.ykc3.android.usbi2c.app"
 
         minSdkVersion versions.sdk.min
-        targetSdkVersion versions.sdk.targets
+        targetSdkVersion versions.sdk.target
 
         versionCode versions.project.major * 1000000 + versions.project.minor * 1000 + versions.project.patch
         versionName versions.project.number
