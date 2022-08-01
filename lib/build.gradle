@@ -2,7 +2,7 @@ apply plugin: 'com.android.library'
 apply plugin: 'maven-publish'
 
 android {
-    compileSdkVersion 30
+    compileSdkVersion versions.sdk.compile
 
     defaultConfig {
         minSdkVersion versions.sdk.min
