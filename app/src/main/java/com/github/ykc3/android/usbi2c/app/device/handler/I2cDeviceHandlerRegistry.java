@@ -42,8 +42,7 @@ public class I2cDeviceHandlerRegistry {
 
     public I2cDeviceHandler findDeviceHandler(UsbI2cDevice device) {
         for (I2cDeviceHandler handler: deviceHandlers) {
-            if (handler.isAddressRelated(device.getAddress())
-                    && handler.isDeviceSupported(device)) {
+            if (handler.isDeviceSupported(device)) {
                 return handler;
             }
         }

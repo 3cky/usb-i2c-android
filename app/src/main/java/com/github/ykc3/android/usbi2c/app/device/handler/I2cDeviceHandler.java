@@ -22,14 +22,30 @@ import com.github.ykc3.android.usbi2c.UsbI2cDevice;
 
 import java.io.IOException;
 
+/**
+ * Specific I2C device handler.
+ */
 public interface I2cDeviceHandler {
-    String getDevicePartNumber();
-
-    int[] getRelatedAddresses();
-
-    boolean isAddressRelated(int address);
-
+    /**
+     * Check this I2C device is supported by this handler.
+     * @param device I2C device to check
+     * @return true if device supported by this handler, false otherwise
+     */
     boolean isDeviceSupported(UsbI2cDevice device);
 
-    String getDeviceDescriptor(UsbI2cDevice device) throws IOException;
+    /**
+     * Get supported I2C device part number.
+     * @param device device supported I2C device
+     * @return device part number
+     * @throws IOException in case of device I/O error
+     */
+    String getDevicePartNumber(UsbI2cDevice device) throws IOException;
+
+    /**
+     * Get supported I2C device description.
+     * @param device supported I2C device
+     * @return device description
+     * @throws IOException in case of device I/O error
+     */
+    String getDeviceDescription(UsbI2cDevice device) throws IOException;
 }

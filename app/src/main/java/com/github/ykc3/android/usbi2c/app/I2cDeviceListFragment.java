@@ -86,16 +86,16 @@ public class I2cDeviceListFragment extends Fragment {
         final List<I2cDeviceInfo> candidateDeviceInfos;
         final boolean isDeviceRecognized;
         final I2cDeviceInfo recognizedDeviceInfo;
-        final String deviceDescriptor;
+        final String deviceDescription;
 
         DeviceItem(int deviceAddress, List<I2cDeviceInfo> candidateDeviceInfos,
                    boolean isDeviceRecognized, I2cDeviceInfo recognizedDeviceInfo,
-                   String deviceDescriptor) {
+                   String deviceDescription) {
             this.deviceAddress = deviceAddress;
             this.candidateDeviceInfos = candidateDeviceInfos;
             this.isDeviceRecognized = isDeviceRecognized;
             this.recognizedDeviceInfo = recognizedDeviceInfo;
-            this.deviceDescriptor = deviceDescriptor;
+            this.deviceDescription = deviceDescription;
         }
 
         String getDeviceHexAddress() {
@@ -106,9 +106,9 @@ public class I2cDeviceListFragment extends Fragment {
             StringBuilder builder = new StringBuilder();
             if (isDeviceRecognized && recognizedDeviceInfo != null) {
                 builder.append(recognizedDeviceInfo.getPartNumber());
-                if (deviceDescriptor != null && !deviceDescriptor.isEmpty()) {
+                if (deviceDescription != null && !deviceDescription.isEmpty()) {
                     builder.append(" (");
-                    builder.append(deviceDescriptor);
+                    builder.append(deviceDescription);
                     builder.append(")");
                 }
             } else if (candidateDeviceInfos != null && !candidateDeviceInfos.isEmpty()) {
@@ -244,18 +244,18 @@ public class I2cDeviceListFragment extends Fragment {
             boolean isDeviceRecognized = false;
             List<I2cDeviceInfo> candidateDeviceInfos = null;
             I2cDeviceInfo recognizedDeviceInfo = null;
-            String deviceDescriptor = null;
+            String deviceDescription = null;
 
             // First trying to find handler for concrete I2C device with given address
             I2cDeviceHandler deviceHandler = fragment.i2cDeviceHandlerRegistry.findDeviceHandler(
                     i2cDevice);
             if (deviceHandler != null) {
                 isDeviceRecognized = true;
-                recognizedDeviceInfo = fragment.i2cDeviceInfoRegistry.findDeviceByPartNumber(
-                        deviceHandler.getDevicePartNumber());
                 try {
+                    recognizedDeviceInfo = fragment.i2cDeviceInfoRegistry.findDeviceByPartNumber(
+                            deviceHandler.getDevicePartNumber(i2cDevice));
                     // Handler found, trying to use it to get I2C device info
-                    deviceDescriptor = deviceHandler.getDeviceDescriptor(i2cDevice);
+                    deviceDescription = deviceHandler.getDeviceDescription(i2cDevice);
                 } catch (IOException e) {
                     Log.e(TAG,"can't get device info", e);
                 }
@@ -268,7 +268,7 @@ public class I2cDeviceListFragment extends Fragment {
             }
 
             return new DeviceItem(i2cDevice.getAddress(), candidateDeviceInfos, isDeviceRecognized,
-                    recognizedDeviceInfo, deviceDescriptor);
+                    recognizedDeviceInfo, deviceDescription);
         }
 
         @Override
