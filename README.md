@@ -27,7 +27,7 @@ allprojects {
 Add library to dependencies:
 ```gradle
 dependencies {
-    implementation 'com.github.3cky:usb-i2c-android:1.3.0'
+    implementation 'com.github.3cky:usb-i2c-android:1.3.1'
 }
 ```
 
