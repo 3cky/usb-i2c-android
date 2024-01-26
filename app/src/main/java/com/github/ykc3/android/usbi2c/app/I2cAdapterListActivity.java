@@ -27,6 +27,7 @@ import android.content.IntentFilter;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
@@ -242,8 +243,9 @@ public class I2cAdapterListActivity extends AppCompatActivity {
 
         usbI2cManager = UsbI2cManager.create(usbManager).build();
 
+        int flags = Build.VERSION.SDK_INT >= Build.VERSION_CODES.M ? PendingIntent.FLAG_MUTABLE : 0;
         usbPermissionIntent = PendingIntent.getBroadcast(this, 0,
-                new Intent(ACTION_USB_PERMISSION), 0);
+                new Intent(ACTION_USB_PERMISSION), flags);
         IntentFilter usbReceiverFilter = new IntentFilter(ACTION_USB_PERMISSION);
         usbReceiverFilter.addAction(UsbManager.ACTION_USB_DEVICE_ATTACHED);
         usbReceiverFilter.addAction(UsbManager.ACTION_USB_DEVICE_DETACHED);
