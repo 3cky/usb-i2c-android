@@ -13,7 +13,6 @@
         android:fullBackupContent="true">
         <activity
             android:name=".I2cAdapterListActivity"
-            android:label="@string/title_adapter_list"
             android:theme="@style/AppTheme.NoActionBar"
             android:launchMode="singleTask"
             android:exported="true">
