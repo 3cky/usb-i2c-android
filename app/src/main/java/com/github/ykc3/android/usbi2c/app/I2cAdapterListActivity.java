@@ -18,6 +18,7 @@
 
 package com.github.ykc3.android.usbi2c.app;
 
+import android.annotation.SuppressLint;
 import android.app.Dialog;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
@@ -213,6 +214,7 @@ public class I2cAdapterListActivity extends AppCompatActivity {
         this.getSupportFragmentManager().popBackStack();
     }
 
+    @SuppressLint("UnspecifiedRegisterReceiverFlag")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -244,12 +246,17 @@ public class I2cAdapterListActivity extends AppCompatActivity {
         usbI2cManager = UsbI2cManager.create(usbManager).build();
 
         int flags = Build.VERSION.SDK_INT >= Build.VERSION_CODES.M ? PendingIntent.FLAG_MUTABLE : 0;
-        usbPermissionIntent = PendingIntent.getBroadcast(this, 0,
-                new Intent(ACTION_USB_PERMISSION), flags);
+        Intent intent = new Intent(ACTION_USB_PERMISSION);
+        intent.setPackage(getPackageName());
+        usbPermissionIntent = PendingIntent.getBroadcast(this, 0, intent, flags);
         IntentFilter usbReceiverFilter = new IntentFilter(ACTION_USB_PERMISSION);
         usbReceiverFilter.addAction(UsbManager.ACTION_USB_DEVICE_ATTACHED);
         usbReceiverFilter.addAction(UsbManager.ACTION_USB_DEVICE_DETACHED);
-        registerReceiver(usbReceiver, usbReceiverFilter);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            registerReceiver(usbReceiver, usbReceiverFilter, RECEIVER_EXPORTED);
+        } else {
+            registerReceiver(usbReceiver, usbReceiverFilter);
+        }
 
         adapterListRefreshLayout = findViewById(R.id.adapter_list_refresh);
         adapterListRefreshLayout.setOnRefreshListener(onRefreshListener);

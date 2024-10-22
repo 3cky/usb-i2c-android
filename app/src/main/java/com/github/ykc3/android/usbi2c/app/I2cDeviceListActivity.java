@@ -18,11 +18,13 @@
 
 package com.github.ykc3.android.usbi2c.app;
 
+import android.annotation.SuppressLint;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.hardware.usb.UsbManager;
+import android.os.Build;
 import android.os.Bundle;
 import androidx.appcompat.widget.Toolbar;
 import androidx.appcompat.app.AppCompatActivity;
@@ -47,6 +49,7 @@ public class I2cDeviceListActivity extends AppCompatActivity {
         }
     };
 
+    @SuppressLint("UnspecifiedRegisterReceiverFlag")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -84,7 +87,11 @@ public class I2cDeviceListActivity extends AppCompatActivity {
 
         IntentFilter usbReceiverFilter = new IntentFilter(I2cAdapterListActivity.ACTION_USB_PERMISSION);
         usbReceiverFilter.addAction(UsbManager.ACTION_USB_DEVICE_DETACHED);
-        registerReceiver(usbReceiver, usbReceiverFilter);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            registerReceiver(usbReceiver, usbReceiverFilter, RECEIVER_EXPORTED);
+        } else {
+            registerReceiver(usbReceiver, usbReceiverFilter);
+        }
     }
 
     @Override
