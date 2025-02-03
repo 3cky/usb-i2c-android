@@ -12,6 +12,7 @@ No root access or special kernel drivers are required.
 * [Silicon Labs CP2112](https://www.silabs.com/documents/public/data-sheets/cp2112-datasheet.pdf)
 * [Qinheng Microelectronics CH341](https://www.wch-ic.com/products/CH341.html)
 * [Future Technology Devices International FT232H](https://ftdichip.com/wp-content/uploads/2024/09/DS_FT2232H.pdf)
+* [Future Technology Devices International FT260](https://www.ftdichip.com/Support/Documents/DataSheets/ICs/DS_FT260.pdf)
 
 ## Usage
 
