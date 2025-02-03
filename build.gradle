@@ -2,8 +2,8 @@
 
 // Project semantic versioning components (https://semver.org/)
 def projectVersionMajor = 1
-def projectVersionMinor = 3
-def projectVersionPatch = 1
+def projectVersionMinor = 4
+def projectVersionPatch = 0
 
 buildscript {
     repositories {
