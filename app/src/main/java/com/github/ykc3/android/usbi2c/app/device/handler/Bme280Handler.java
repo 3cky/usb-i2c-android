@@ -19,6 +19,7 @@
 package com.github.ykc3.android.usbi2c.app.device.handler;
 
 import android.annotation.SuppressLint;
+import android.util.Log;
 
 import com.github.ykc3.android.usbi2c.UsbI2cDevice;
 
@@ -26,9 +27,11 @@ import java.io.IOException;
 
 /**
  * Bosch Sensortec BMP280/BME280 digital temperature/pressure/humidity sensor.
- * Based on https://github.com/ControlEverythingCommunity/BME280/blob/master/Java/BME280.java
+ * Based on <a href="https://github.com/ControlEverythingCommunity/BME280/blob/master/Java/BME280.java"/>BME280.java</a>
  */
 public class Bme280Handler extends AbstractI2cDeviceHandler {
+    private final String TAG = Bme280Handler.class.getSimpleName();
+
     private static final String BMP280_PART_NUMBER = "BMP280";
     private static final String BME280_PART_NUMBER = "BME280";
 
@@ -61,8 +64,10 @@ public class Bme280Handler extends AbstractI2cDeviceHandler {
     protected boolean isDeviceRecognized(UsbI2cDevice device) {
         try {
             int chipId = readChipId(device);
+            Log.d(TAG, String.format("read chip ID: 0x%02x", chipId));
             return chipId == BMP280_CHIP_ID || chipId == BME280_CHIP_ID;
-        } catch (IOException ignored) {
+        } catch (IOException e) {
+            Log.d(TAG,"can't read chip ID", e);
         }
         return false;
     }
