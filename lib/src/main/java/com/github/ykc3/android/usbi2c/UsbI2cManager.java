@@ -24,6 +24,7 @@ import android.hardware.usb.UsbManager;
 import com.github.ykc3.android.usbi2c.adapter.Ch341UsbI2cAdapter;
 import com.github.ykc3.android.usbi2c.adapter.Cp2112UsbI2cAdapter;
 import com.github.ykc3.android.usbi2c.adapter.Ft232hUsbI2cAdapter;
+import com.github.ykc3.android.usbi2c.adapter.Ft260UsbI2cAdapter;
 import com.github.ykc3.android.usbi2c.adapter.TinyUsbI2cAdapter;
 
 import java.lang.reflect.Constructor;
@@ -34,11 +35,24 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
+/**
+ * Class for finding and creating {@link UsbI2cAdapter}s for connected USB I2C devices.
+ */
 public class UsbI2cManager {
     private final UsbManager usbManager;
 
     private final List<Class<? extends UsbI2cAdapter>> usbI2cAdapters;
 
+    /**
+     * Class holding USB device vendor and product identifiers.
+     * <p>
+     * This class used to associate {@link UsbI2cAdapter} with supported USB devices.
+     * Each {@link UsbI2cAdapter} implementation must declare its supported USB device identifiers
+     * using the static method {@code getSupportedUsbDeviceIdentifiers()}.
+     * </p>
+     * @see UsbDevice#getVendorId()
+     * @see UsbDevice#getProductId()
+     */
     public static class UsbDeviceIdentifier {
         private final int vendorId;
         private final int productId;
@@ -48,10 +62,18 @@ public class UsbI2cManager {
             this.productId = productId;
         }
 
+        /**
+         * Get USB device vendor identifier.
+         * @return USB device vendor identifier
+         */
         public int getVendorId() {
             return vendorId;
         }
 
+        /**
+         * Get USB device product identifier.
+         * @return USB device product identifier
+         */
         public int getProductId() {
             return productId;
         }
@@ -97,6 +119,7 @@ public class UsbI2cManager {
         usbI2cAdapters.add(Cp2112UsbI2cAdapter.class);
         usbI2cAdapters.add(Ch341UsbI2cAdapter.class);
         usbI2cAdapters.add(Ft232hUsbI2cAdapter.class);
+        usbI2cAdapters.add(Ft260UsbI2cAdapter.class);
         return usbI2cAdapters;
     }
 
@@ -165,6 +188,9 @@ public class UsbI2cManager {
         return null;
     }
 
+    /**
+     * Builder class for {@link UsbI2cManager}.
+     */
     public static class Builder {
         private final UsbManager usbManager;
 
@@ -174,11 +200,21 @@ public class UsbI2cManager {
             this.usbManager = usbManager;
         }
 
+        /**
+         * Set list of USB I2C adapters to use.
+         * <p>
+         * If this method not called, list returned by
+         * {@link #getSupportedUsbI2cAdapters()} used by default.
+         * </p>
+         * @param usbI2cAdapters list of USB I2C adapters to use
+         * @return this Builder object
+         */
         public Builder setAdapters(List<Class<? extends UsbI2cAdapter>> usbI2cAdapters) {
             this.usbI2cAdapters = usbI2cAdapters;
             return this;
         }
 
+        /** @return new {@link UsbI2cManager} object */
         public UsbI2cManager build() {
             if (usbI2cAdapters == null) {
                 usbI2cAdapters = getSupportedUsbI2cAdapters();
