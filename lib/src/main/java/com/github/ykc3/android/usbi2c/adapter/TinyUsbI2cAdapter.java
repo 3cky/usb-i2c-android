@@ -28,7 +28,7 @@ import static com.github.ykc3.android.usbi2c.UsbI2cManager.UsbDeviceIdentifier;
 import java.io.IOException;
 
 /**
- * Cheap and simple I2C to USB interface (http://www.harbaum.org/till/i2c_tiny_usb).
+ * Cheap and simple I2C to USB interface (<a href="https://github.com/harbaum/I2C-Tiny-USB">github project</a>).
  */
 public class TinyUsbI2cAdapter extends BaseUsbI2cAdapter {
     // Adapter name
@@ -55,6 +55,7 @@ public class TinyUsbI2cAdapter extends BaseUsbI2cAdapter {
 
         @Override
         protected void deviceReadReg(int reg, byte[] buffer, int length) throws IOException {
+            checkDataLength(length, buffer.length);
             regBuffer[0] = (byte) reg;
             usbWrite(CMD_I2C_IO | CMD_I2C_IO_BEGIN, 0, address, regBuffer, 1);
             usbRead(CMD_I2C_IO | CMD_I2C_IO_END, I2C_M_RD, address, buffer, length);
@@ -62,12 +63,14 @@ public class TinyUsbI2cAdapter extends BaseUsbI2cAdapter {
 
         @Override
         protected void deviceRead(byte[] buffer, int length) throws IOException {
+            checkDataLength(length, buffer.length);
             usbRead(CMD_I2C_IO | CMD_I2C_IO_BEGIN | CMD_I2C_IO_END, I2C_M_RD, address,
                     buffer, length);
         }
 
         @Override
         protected void deviceWrite(byte[] buffer, int length) throws IOException {
+            checkDataLength(length, buffer.length);
             usbWrite(CMD_I2C_IO | CMD_I2C_IO_BEGIN | CMD_I2C_IO_END, 0, address,
                     buffer, length);
         }

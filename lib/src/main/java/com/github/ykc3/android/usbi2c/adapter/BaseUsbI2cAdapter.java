@@ -30,6 +30,9 @@ import com.github.ykc3.android.usbi2c.UsbI2cManager;
 import java.io.IOException;
 import java.util.concurrent.locks.ReentrantLock;
 
+/**
+ * Base class for USB I2C adapters.
+ */
 abstract class BaseUsbI2cAdapter implements UsbI2cAdapter {
     // Linux kernel flags
     static final int I2C_M_RD = 0x01; // read data, from slave to master
@@ -271,6 +274,17 @@ abstract class BaseUsbI2cAdapter implements UsbI2cAdapter {
         return usbDevice;
     }
 
+    /**
+     * Send control transfer request to USB device.
+     *
+     * @param requestType control transfer request type
+     * @param request control transfer request
+     * @param value control transfer request value
+     * @param index control transfer request index
+     * @param data control transfer request data
+     * @param length control transfer request data length
+     * @throws IOException in case of control transfer error
+     */
     final void controlTransfer(int requestType, int request, int value,
                                int index, byte[] data, int length) throws IOException {
         checkOpened();
@@ -342,5 +356,18 @@ abstract class BaseUsbI2cAdapter implements UsbI2cAdapter {
      */
     static byte getAddressByte(int address, boolean isRead) {
         return (byte) ((address << 1) | (isRead ? 0x01 : 0x00));
+    }
+
+    /**
+     * Check data length.
+     *
+     * @param length data length
+     * @param maxLength max data length
+     */
+    protected void checkDataLength(int length, int maxLength) {
+        if (length < 1 || length > maxLength) {
+            throw new IllegalArgumentException(String.format("Invalid data length: %d (min 1, max %d)",
+                    length, maxLength));
+        }
     }
 }

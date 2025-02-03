@@ -18,10 +18,7 @@
 
 package com.github.ykc3.android.usbi2c.adapter;
 
-import android.hardware.usb.UsbConstants;
 import android.hardware.usb.UsbDevice;
-import android.hardware.usb.UsbEndpoint;
-import android.hardware.usb.UsbInterface;
 
 import com.github.ykc3.android.usbi2c.UsbI2cManager;
 
@@ -33,42 +30,27 @@ import static com.github.ykc3.android.usbi2c.UsbI2cManager.UsbDeviceIdentifier;
  * The Silicon Labs CP2112 chip is a USB HID device which provides an
  * SMBus controller for talking to slave devices.
  * <p>
- * Data Sheet:
- * http://www.silabs.com/Support%20Documents/TechnicalDocs/CP2112.pdf
- * Programming Interface Specification:
- * https://www.silabs.com/documents/public/application-notes/an495-cp2112-interface-specification.pdf
+ * <a href="http://www.silabs.com/Support%20Documents/TechnicalDocs/CP2112.pdf">Data Sheet</a>
+ * <p>
+ * <a href="https://www.silabs.com/documents/public/application-notes/an495-cp2112-interface-specification.pdf">Programming Interface Specification</a>
  */
-public class Cp2112UsbI2cAdapter extends BaseUsbI2cAdapter {
+public class Cp2112UsbI2cAdapter extends HidUsbI2cAdapter {
     // Adapter name
     public static final String ADAPTER_NAME = "CP2112";
 
-    // HID feature request GET_REPORT code
-    private static final int HID_FEATURE_REQUEST_REPORT_GET = 0x01;
-    // HID feature request SET_REPORT code
-    private static final int HID_FEATURE_REQUEST_REPORT_SET = 0x09;
-    // HID feature request INPUT report type
-    private static final int HID_FEATURE_REQUEST_REPORT_TYPE_INPUT = 0x100;
-    // HID feature request OUTPUT report type
-    private static final int HID_FEATURE_REQUEST_REPORT_TYPE_OUTPUT = 0x200;
-
-    // USB Interrupt IN/OUT packet max size
-    private static final int MAX_INTERRUPT_TRANSFER_SIZE = 64;
-
-    private final byte[] buffer = new byte[MAX_INTERRUPT_TRANSFER_SIZE];
-
     // CP2112 report IDs
-    private static final byte REPORT_ID_SMBUS_CONFIG = 0x06;
-    private static final byte REPORT_ID_DATA_READ_REQUEST = 0x10;
-    private static final byte REPORT_ID_DATA_WRITE_READ_REQUEST = 0x11;
-    private static final byte REPORT_ID_DATA_READ_FORCE_SEND = 0x12;
-    private static final byte REPORT_ID_DATA_READ_RESPONSE = 0x13;
-    private static final byte REPORT_ID_DATA_WRITE_REQUEST = 0x14;
-    private static final byte REPORT_ID_TRANSFER_STATUS_REQUEST = 0x15;
-    private static final byte REPORT_ID_TRANSFER_STATUS_RESPONSE = 0x16;
-    private static final byte REPORT_ID_CANCEL_TRANSFER = 0x17;
+    private static final int REPORT_ID_SMBUS_CONFIG = 0x06;
+    private static final int REPORT_ID_DATA_READ_REQUEST = 0x10;
+    private static final int REPORT_ID_DATA_WRITE_READ_REQUEST = 0x11;
+    private static final int REPORT_ID_DATA_READ_FORCE_SEND = 0x12;
+    private static final int REPORT_ID_DATA_READ_RESPONSE = 0x13;
+    private static final int REPORT_ID_DATA_WRITE_REQUEST = 0x14;
+    private static final int REPORT_ID_TRANSFER_STATUS_REQUEST = 0x15;
+    private static final int REPORT_ID_TRANSFER_STATUS_RESPONSE = 0x16;
+    private static final int REPORT_ID_CANCEL_TRANSFER = 0x17;
 
-    // CP2112 SMBus configuration size
-    private static final int SMBUS_CONFIG_SIZE = 13;
+    // CP2112 SMBus configuration size (including ReportID)
+    private static final int SMBUS_CONFIG_SIZE = 14;
 
     // CP2112 SMBus configuration: Clock Speed
     private static final int SMBUS_CONFIG_CLOCK_SPEED_OFFSET = 1;
@@ -128,46 +110,20 @@ public class Cp2112UsbI2cAdapter extends BaseUsbI2cAdapter {
     }
 
     @Override
-    public Cp2112UsbI2cDevice getDeviceImpl(int address) {
+    protected BaseUsbI2cDevice getDeviceImpl(int address) {
         return new Cp2112UsbI2cDevice(address);
     }
 
     @Override
     protected void init(UsbDevice usbDevice) throws IOException {
-        if (usbDevice.getInterfaceCount() == 0) {
-            throw new IOException("No interfaces found for device: " + usbDevice);
-        }
-
-        UsbInterface usbInterface = usbDevice.getInterface(0);
-        if (usbInterface.getEndpointCount() < 2) {
-            throw new IOException("No endpoints found for device: " + usbDevice);
-        }
-
-        UsbEndpoint usbReadEndpoint = null, usbWriteEndpoint = null;
-        for (int i = 0; i < usbInterface.getEndpointCount(); i++) {
-            UsbEndpoint usbEndpoint = usbInterface.getEndpoint(i);
-            if (usbEndpoint.getType() == UsbConstants.USB_ENDPOINT_XFER_INT) {
-                if (usbEndpoint.getDirection() == UsbConstants.USB_DIR_IN) {
-                    usbReadEndpoint = usbEndpoint;
-                } else {
-                    usbWriteEndpoint = usbEndpoint;
-                }
-            }
-        }
-        if (usbReadEndpoint == null || usbWriteEndpoint == null) {
-            throw new IOException("No read or write HID endpoint found for device: " + usbDevice);
-        }
-        setBulkEndpoints(usbReadEndpoint, usbWriteEndpoint);
-
-        configure();
-
+        super.init(usbDevice);
         // Drain all stale data reports
         drainPendingDataReports();
     }
 
     protected void configure() throws IOException {
         // Get current config
-        getHidFeatureReport(REPORT_ID_SMBUS_CONFIG, buffer, SMBUS_CONFIG_SIZE + 1); // reserve one byte for Report ID
+        getHidFeatureReport(REPORT_ID_SMBUS_CONFIG, buffer, SMBUS_CONFIG_SIZE);
 
         // Clock Speed (in Hertz, default 0x000186A0 - 100 kHz)
         int clockSpeed = getClockSpeed();
@@ -180,7 +136,7 @@ public class Cp2112UsbI2cAdapter extends BaseUsbI2cAdapter {
         buffer[SMBUS_CONFIG_RETRY_TIME_OFFSET]     = 0x00;
         buffer[SMBUS_CONFIG_RETRY_TIME_OFFSET + 1] = 0x01;
 
-        sendHidFeatureReport(REPORT_ID_SMBUS_CONFIG, buffer, SMBUS_CONFIG_SIZE + 1);
+        setHidFeatureReport(buffer, SMBUS_CONFIG_SIZE);
     }
 
     @Override
@@ -188,51 +144,44 @@ public class Cp2112UsbI2cAdapter extends BaseUsbI2cAdapter {
         return (speed >= MIN_CLOCK_SPEED && speed <= MAX_CLOCK_SPEED);
     }
 
-    private void checkWriteDataLength(int length) {
-        checkDataLength(length, MAX_DATA_WRITE_LENGTH);
+    private void checkWriteDataLength(int length, int bufferLength) {
+        checkDataLength(length, Math.min(MAX_DATA_WRITE_LENGTH, bufferLength));
     }
 
-    private void checkReadDataLength(int length) {
-        checkDataLength(length, MAX_DATA_READ_LENGTH);
-    }
-
-    private void checkDataLength(int length, int maxLength) {
-        if (length < 1 || length > maxLength) {
-            throw new IllegalArgumentException(String.format("Invalid data length: %d (min 1, max %d)",
-                    length, maxLength));
-        }
+    private void checkReadDataLength(int length, int bufferLength) {
+        checkDataLength(length, Math.min(MAX_DATA_READ_LENGTH, bufferLength));
     }
 
     private void writeData(int address, byte[] data, int length) throws IOException {
-        checkWriteDataLength(length);
+        checkWriteDataLength(length, data.length);
         buffer[0] = REPORT_ID_DATA_WRITE_REQUEST;
         buffer[1] = getAddressByte(address, false);
         buffer[2] = (byte) length;
         System.arraycopy(data, 0, buffer, 3, length);
-        sendHidDataReport(buffer, length + 3, USB_TIMEOUT_MILLIS);
+        sendHidDataReport(buffer, length + 3);
         waitTransferComplete();
     }
 
     private void readData(int address, byte[] data, int length) throws IOException {
-        checkReadDataLength(length);
+        checkReadDataLength(length, data.length);
         buffer[0] = REPORT_ID_DATA_READ_REQUEST;
         buffer[1] = getAddressByte(address, false); // read bit is not required
-        buffer[2] = (byte) ((length >> 8) & 0xff);
+        buffer[2] = (byte) (length >> 8);
         buffer[3] = (byte) length;
-        sendHidDataReport(buffer, 4, USB_TIMEOUT_MILLIS);
+        sendHidDataReport(buffer, 4);
         waitTransferComplete();
         readDataFully(data, length);
     }
 
     private void readRegData(int address, int reg, byte[] data, int length) throws IOException {
-        checkReadDataLength(length);
+        checkReadDataLength(length, data.length);
         buffer[0] = REPORT_ID_DATA_WRITE_READ_REQUEST;
         buffer[1] = getAddressByte(address, false); // read bit is not required
-        buffer[2] = (byte) ((length >> 8) & 0xff);
+        buffer[2] = (byte) (length >> 8);
         buffer[3] = (byte) length;
         buffer[4] = 0x01; // number of bytes in target address (register ID)
         buffer[5] = (byte) reg;
-        sendHidDataReport(buffer, 6, USB_TIMEOUT_MILLIS);
+        sendHidDataReport(buffer, 6);
         waitTransferComplete();
         readDataFully(data, length);
     }
@@ -297,19 +246,19 @@ public class Cp2112UsbI2cAdapter extends BaseUsbI2cAdapter {
         buffer[0] = REPORT_ID_DATA_READ_FORCE_SEND;
         buffer[1] = (byte) ((length >> 8) & 0xff);
         buffer[2] = (byte) length;
-        sendHidDataReport(buffer, 3, USB_TIMEOUT_MILLIS);
+        sendHidDataReport(buffer, 3);
     }
 
     private void sendTransferStatusRequest() throws IOException {
         buffer[0] = REPORT_ID_TRANSFER_STATUS_REQUEST;
         buffer[1] = 0x01;
-        sendHidDataReport(buffer, 2, USB_TIMEOUT_MILLIS);
+        sendHidDataReport(buffer, 2);
     }
 
     private void cancelTransfer() throws IOException {
         buffer[0] = REPORT_ID_CANCEL_TRANSFER;
         buffer[1] = 0x01;
-        sendHidDataReport(buffer, 2, USB_TIMEOUT_MILLIS);
+        sendHidDataReport(buffer, 2);
     }
 
     private void drainPendingDataReports() throws IOException {
@@ -327,69 +276,8 @@ public class Cp2112UsbI2cAdapter extends BaseUsbI2cAdapter {
         cancelTransfer();
     }
 
-    private void checkReportId(int reportId) {
-        if ((reportId & 0xff) != reportId) {
-            throw new IllegalArgumentException("Invalid report ID: " + reportId);
-        }
-    }
-
-    /**
-     * Read HID feature report from USB device to data buffer.
-     *
-     * @param reportId feature report ID
-     * @param data data buffer to read report into
-     * @param length feature report data length to read
-     * @throws IOException in case of I/O error
-     */
-    private void getHidFeatureReport(int reportId, byte[] data, int length) throws IOException {
-        checkReportId(reportId);
-        controlTransfer(UsbConstants.USB_TYPE_CLASS | UsbConstants.USB_DIR_IN
-                        | UsbConstants.USB_INTERFACE_SUBCLASS_BOOT,
-                HID_FEATURE_REQUEST_REPORT_GET, reportId | HID_FEATURE_REQUEST_REPORT_TYPE_OUTPUT,
-                0, data, length);
-    }
-
-    /**
-     * Send HID feature report from data buffer to USB device.
-     *
-     * @param reportId feature report ID
-     * @param data feature report data buffer
-     * @param length feature report data length to send
-     * @throws IOException in case of I/O error
-     */
-    private void sendHidFeatureReport(int reportId, byte[] data, int length) throws IOException {
-        checkReportId(reportId);
-        controlTransfer(UsbConstants.USB_TYPE_CLASS | UsbConstants.USB_DIR_OUT
-                        | UsbConstants.USB_INTERFACE_SUBCLASS_BOOT,
-                HID_FEATURE_REQUEST_REPORT_SET, reportId | HID_FEATURE_REQUEST_REPORT_TYPE_INPUT,
-                0, data, length);
-    }
-
-    /**
-     * Read HID data report from USB device to data buffer.
-     *
-     * @param data data buffer to read report into
-     * @param timeout read timeout in milliseconds
-     * @throws IOException in case of data report read error or timeout
-     */
-    private void getHidDataReport(byte[] data, int timeout) throws IOException {
-        bulkRead(data, 0, data.length, timeout);
-    }
-
-    /**
-     * Send HID data report from data buffer to USB device.
-     *
-     * @param data data buffer to send report from
-     * @param length data report length
-     * @param timeout send timeout in milliseconds
-     * @throws IOException in case of data report send error
-     */
-    private void sendHidDataReport(byte[] data, int length, int timeout) throws IOException {
-        bulkWrite(data, length, USB_TIMEOUT_MILLIS);
-    }
-
     public static UsbDeviceIdentifier[] getSupportedUsbDeviceIdentifiers() {
-        return new UsbDeviceIdentifier[]{
+        return new UsbDeviceIdentifier[] {
                 new UsbDeviceIdentifier(0x10c4, 0xea90)
         };
     }

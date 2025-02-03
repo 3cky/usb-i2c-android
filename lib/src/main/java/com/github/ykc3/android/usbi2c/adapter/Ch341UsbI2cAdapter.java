@@ -31,7 +31,9 @@ import java.io.IOException;
 
 /**
  * CH341 is a USB bus convert chip, providing UART, printer port, parallel and synchronous serial with
- * 2-wire or 4-wire through USB bus (http://www.anok.ceti.pl/download/ch341ds1.pdf).
+ * 2-wire or 4-wire through USB bus.
+ * <p>
+ * <a href="http://www.anok.ceti.pl/download/ch341ds1.pdf">Data Sheet</a>
  */
 public class Ch341UsbI2cAdapter extends BaseUsbI2cAdapter {
     // Adapter name
@@ -89,7 +91,7 @@ public class Ch341UsbI2cAdapter extends BaseUsbI2cAdapter {
     }
 
     @Override
-    protected Ch341UsbI2cDevice getDeviceImpl(int address) {
+    protected BaseUsbI2cDevice getDeviceImpl(int address) {
         return new Ch341UsbI2cDevice(address);
     }
 
@@ -150,16 +152,12 @@ public class Ch341UsbI2cAdapter extends BaseUsbI2cAdapter {
         writeBulkData(writeBuffer, 3);
     }
 
-    private void checkDataLength(int length) {
-        int maxLength = MAX_TRANSFER_SIZE - 6;
-        if (length > maxLength) {
-            throw new IllegalArgumentException(String.format("Invalid data length: %d (max %d)",
-                    length, maxLength));
-        }
+    protected void checkDataLength(int length, int bufferDataLength) {
+        super.checkDataLength(length, Math.min(MAX_TRANSFER_SIZE - 6, bufferDataLength));
     }
 
     private void writeData(int address, byte[] data, int length) throws IOException {
-        checkDataLength(length);
+        checkDataLength(length, data.length);
         int i = 0;
         writeBuffer[i++] = (byte) CH341_CMD_I2C_STREAM;
         writeBuffer[i++] = CH341_CMD_I2C_STM_STA; // START condition
@@ -173,7 +171,7 @@ public class Ch341UsbI2cAdapter extends BaseUsbI2cAdapter {
     }
 
     private void readData(int address, byte[] data, int length) throws IOException {
-        checkDataLength(length);
+        checkDataLength(length, data.length);
         checkDevicePresence(address); // to avoid weird phantom devices in scan results
         int i = 0;
         writeBuffer[i++] = (byte) CH341_CMD_I2C_STREAM;
@@ -188,11 +186,11 @@ public class Ch341UsbI2cAdapter extends BaseUsbI2cAdapter {
         }
         writeBuffer[i++] = CH341_CMD_I2C_STM_STO; // STOP condition
         writeBuffer[i++] = CH341_CMD_I2C_STM_END; // end of transaction
-        int res = transferBulkData(writeBuffer, i, data, length);
+        transferBulkData(writeBuffer, i, data, length);
     }
 
     private void readRegData(int address, int reg, byte[] data, int length) throws IOException {
-        checkDataLength(length);
+        checkDataLength(length, data.length);
         // Write register number
         int i = 0;
         writeBuffer[i++] = (byte) CH341_CMD_I2C_STREAM;

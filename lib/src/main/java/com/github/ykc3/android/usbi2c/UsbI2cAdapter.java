@@ -23,12 +23,12 @@ import android.hardware.usb.UsbDevice;
 import java.io.IOException;
 
 /**
- * I2C adapter connected to USB bus.
+ * I2C adapter connected to the USB bus.
  */
 public interface UsbI2cAdapter extends AutoCloseable {
-    /** Standard clock speed (100 kbit/s) */
+    /** Standard clock speed (100 Kbit/s) */
     int CLOCK_SPEED_STANDARD = 100000;
-    /** Fast clock speed (400 kbit/s) */
+    /** Fast clock speed (400 Kbit/s) */
     int CLOCK_SPEED_FAST = 400000;
     /** Fast plus clock speed (1 Mbit/s) */
     int CLOCK_SPEED_FAST_PLUS = 1000000;
@@ -84,10 +84,10 @@ public interface UsbI2cAdapter extends AutoCloseable {
     boolean isClockSpeedSupported(int speed);
 
     /**
-     * Set I2C bus clock speed. Default is UsbI2cAdapter.SPEED_STANDARD.
+     * Set I2C bus clock speed. Default value is {@code UsbI2cAdapter.CLOCK_SPEED_STANDARD}.
      *
-     * @param speed I2C bus clock speed value to set (in bit/s)
-     * @throws IllegalArgumentException if this I2C bus clock speed is not supported by adapter
+     * @param speed I2C bus clock speed value to set (in Hz)
+     * @throws IllegalArgumentException if this I2C bus clock speed is not supported by the adapter
      * @throws IOException in case of I/O error
      * @since 1.2
      */

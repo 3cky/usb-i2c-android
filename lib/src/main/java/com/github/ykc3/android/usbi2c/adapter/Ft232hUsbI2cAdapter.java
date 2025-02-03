@@ -33,14 +33,14 @@ import static com.github.ykc3.android.usbi2c.UsbI2cManager.UsbDeviceIdentifier;
  * The FT232H has the Multi-Protocol Synchronous Serial Engine (MPSSE) to simplify
  * synchronous serial protocol (USB to JTAG, I2C, SPI (MASTER) or bit-bang) design.
  * <p>
- * Data Sheet:
- * http://www.ftdichip.com/Support/Documents/DataSheets/ICs/DS_FT232H.pdf
- * MPSSE Basics:
- * http://www.ftdichip.com/Support/Documents/AppNotes/AN_135_MPSSE_Basics.pdf
- * Command Processor for MPSSE and MCU Host Bus Emulation Modes:
- * http://www.ftdichip.com/Support/Documents/AppNotes/AN_108_Command_Processor_for_MPSSE_and_MCU_Host_Bus_Emulation_Modes.pdf
- * USB to I2C Example using the FT232H and FT201X devices:
- * https://ftdichip.com/wp-content/uploads/2020/08/AN_255_USB-to-I2C-Example-using-the-FT232H-and-FT201X-devices-1.pdf
+ * <a href="http://www.ftdichip.com/Support/Documents/DataSheets/ICs/DS_FT232H.pdf">Data Sheet</a>
+ * <p>
+ * <a href="http://www.ftdichip.com/Support/Documents/AppNotes/AN_135_MPSSE_Basics.pdf">MPSSE Basics</a>
+ * <p>
+ * <a href="http://www.ftdichip.com/Support/Documents/AppNotes/AN_108_Command_Processor_for_MPSSE_and_MCU_Host_Bus_Emulation_Modes.pdf">Command Processor for MPSSE and MCU Host Bus Emulation Modes</a>
+ * <p>
+ * <a href="https://ftdichip.com/wp-content/uploads/2020/08/AN_255_USB-to-I2C-Example-using-the-FT232H-and-FT201X-devices-1.pdf">USB to I2C Example using the FT232H and FT201X devices</a>
+ * <p>
  */
 public class Ft232hUsbI2cAdapter extends BaseUsbI2cAdapter {
     // Adapter name
@@ -325,16 +325,13 @@ public class Ft232hUsbI2cAdapter extends BaseUsbI2cAdapter {
         mpsse.bufferWrite();
     }
 
-    private void checkReadDataLength(int length) {
-        int maxLength = readBuffer.length - READ_PACKET_HEADER_LENGTH;
-        if (length > maxLength) {
-            throw new IllegalArgumentException(String.format("Invalid data length: %d (max %d)",
-                    length, maxLength));
-        }
+    private void checkReadDataLength(int length, int dataBufferLength) {
+        checkDataLength(length, Math.min(readBuffer.length
+                - READ_PACKET_HEADER_LENGTH, dataBufferLength));
     }
 
     private void readRegData(int address, int reg, byte[] data, int length) throws IOException {
-        checkReadDataLength(length);
+        checkReadDataLength(length, data.length);
         mpsse.bufferClear();
         mpsse.i2cIdle();
         mpsse.i2cStart();
@@ -357,7 +354,7 @@ public class Ft232hUsbI2cAdapter extends BaseUsbI2cAdapter {
     }
 
     private void readData(int address, byte[] data, int length) throws IOException {
-        checkReadDataLength(length);
+        checkReadDataLength(length, data.length);
         mpsse.bufferClear();
         mpsse.i2cIdle();
         mpsse.i2cStart();
@@ -376,6 +373,7 @@ public class Ft232hUsbI2cAdapter extends BaseUsbI2cAdapter {
     }
 
     private void writeData(int address, byte[] data, int length) throws IOException {
+        checkDataLength(length, data.length);
         mpsse.bufferClear();
         mpsse.i2cIdle();
         mpsse.i2cStart();

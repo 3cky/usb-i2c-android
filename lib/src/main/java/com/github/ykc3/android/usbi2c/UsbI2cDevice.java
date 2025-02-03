@@ -21,7 +21,7 @@ package com.github.ykc3.android.usbi2c;
 import java.io.IOException;
 
 /**
- * Slave I2C device connected to I2C bus and accessible through {@link UsbI2cAdapter}.
+ * Slave I2C device connected to the I2C bus and accessible through a {@link UsbI2cAdapter}.
  */
 public interface UsbI2cDevice {
 
