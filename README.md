@@ -9,9 +9,9 @@ No root access or special kernel drivers are required.
 ## Supported adapters
 
 * [I2C-Tiny-USB](https://github.com/harbaum/I2C-Tiny-USB)
-* [Silicon Labs CP2112](http://www.silabs.com/Support%20Documents/TechnicalDocs/CP2112.pdf)
-* [Qinheng Microelectronics CH341](http://www.wch-ic.com/products/CH341.html)
-* [Future Technology Devices International FT232H](http://www.ftdichip.com/Support/Documents/DataSheets/ICs/DS_FT232H.pdf)
+* [Silicon Labs CP2112](https://www.silabs.com/documents/public/data-sheets/cp2112-datasheet.pdf)
+* [Qinheng Microelectronics CH341](https://www.wch-ic.com/products/CH341.html)
+* [Future Technology Devices International FT232H](https://ftdichip.com/wp-content/uploads/2024/09/DS_FT2232H.pdf)
 
 ## Usage
 

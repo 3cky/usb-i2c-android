@@ -33,11 +33,11 @@ import static com.github.ykc3.android.usbi2c.UsbI2cManager.UsbDeviceIdentifier;
  * The FT232H has the Multi-Protocol Synchronous Serial Engine (MPSSE) to simplify
  * synchronous serial protocol (USB to JTAG, I2C, SPI (MASTER) or bit-bang) design.
  * <p>
- * <a href="http://www.ftdichip.com/Support/Documents/DataSheets/ICs/DS_FT232H.pdf">Data Sheet</a>
+ * <a href="https://ftdichip.com/wp-content/uploads/2024/09/DS_FT2232H.pdf">Data Sheet</a>
  * <p>
- * <a href="http://www.ftdichip.com/Support/Documents/AppNotes/AN_135_MPSSE_Basics.pdf">MPSSE Basics</a>
+ * <a href="https://www.ftdichip.com/Support/Documents/AppNotes/AN_135_MPSSE_Basics.pdf">MPSSE Basics</a>
  * <p>
- * <a href="http://www.ftdichip.com/Support/Documents/AppNotes/AN_108_Command_Processor_for_MPSSE_and_MCU_Host_Bus_Emulation_Modes.pdf">Command Processor for MPSSE and MCU Host Bus Emulation Modes</a>
+ * <a href="https://www.ftdichip.com/Support/Documents/AppNotes/AN_108_Command_Processor_for_MPSSE_and_MCU_Host_Bus_Emulation_Modes.pdf">Command Processor for MPSSE and MCU Host Bus Emulation Modes</a>
  * <p>
  * <a href="https://ftdichip.com/wp-content/uploads/2020/08/AN_255_USB-to-I2C-Example-using-the-FT232H-and-FT201X-devices-1.pdf">USB to I2C Example using the FT232H and FT201X devices</a>
  * <p>

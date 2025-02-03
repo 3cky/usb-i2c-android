@@ -33,7 +33,7 @@ import java.io.IOException;
  * CH341 is a USB bus convert chip, providing UART, printer port, parallel and synchronous serial with
  * 2-wire or 4-wire through USB bus.
  * <p>
- * <a href="http://www.anok.ceti.pl/download/ch341ds1.pdf">Data Sheet</a>
+ * <a href="https://www.anok.ceti.pl/download/ch341ds1.pdf">Data Sheet</a>
  */
 public class Ch341UsbI2cAdapter extends BaseUsbI2cAdapter {
     // Adapter name

@@ -30,7 +30,7 @@ import static com.github.ykc3.android.usbi2c.UsbI2cManager.UsbDeviceIdentifier;
  * The Silicon Labs CP2112 chip is a USB HID device which provides an
  * SMBus controller for talking to slave devices.
  * <p>
- * <a href="http://www.silabs.com/Support%20Documents/TechnicalDocs/CP2112.pdf">Data Sheet</a>
+ * <a href="https://www.silabs.com/documents/public/data-sheets/cp2112-datasheet.pdf">Data Sheet</a>
  * <p>
  * <a href="https://www.silabs.com/documents/public/application-notes/an495-cp2112-interface-specification.pdf">Programming Interface Specification</a>
  */
